@@ -5,7 +5,6 @@ import numpy as np
 import scipy.io
 import torch.utils.data as data
 from PIL import Image
-from deeplab3.mypath import Path
 
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
@@ -14,8 +13,7 @@ class SBDSegmentation(data.Dataset):
     NUM_CLASSES = 21
 
     def __init__(self,
-                 args,
-                 base_dir=Path.db_root_dir('sbd'),
+                 cfg,
                  split='train',
                  ):
         """
@@ -24,7 +22,7 @@ class SBDSegmentation(data.Dataset):
         :param transform: transform to apply
         """
         super().__init__()
-        self._base_dir = base_dir
+        self._base_dir = cfg.DATASET.ROOT
         self._dataset_dir = os.path.join(self._base_dir, 'dataset')
         self._image_dir = os.path.join(self._dataset_dir, 'img')
         self._cat_dir = os.path.join(self._dataset_dir, 'cls')
@@ -36,7 +34,7 @@ class SBDSegmentation(data.Dataset):
             split.sort()
             self.split = split
 
-        self.args = args
+        self.cfg = cfg
 
         # Get list of all images from the split and check that the files exist
         self.im_ids = []
@@ -79,7 +77,7 @@ class SBDSegmentation(data.Dataset):
     def transform(self, sample):
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
+            tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
@@ -92,17 +90,30 @@ class SBDSegmentation(data.Dataset):
 
 
 if __name__ == '__main__':
-    from dataloaders.utils import decode_segmap
+    from deeplab3.config.defaults import get_cfg_defaults
+    from deeplab3.dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse
 
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    args.base_size = 513
-    args.crop_size = 513
+    parser = argparse.ArgumentParser(description="Test sbd Loader")
+    parser.add_argument('config_file', help='config file path')
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
 
-    sbd_train = SBDSegmentation(args, split='train')
+    args = parser.parse_args()
+
+    cfg = get_cfg_defaults()
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+    print(cfg)
+
+    sbd_train = SBDSegmentation(cfg, split='train')
     dataloader = DataLoader(sbd_train, batch_size=2, shuffle=True, num_workers=2)
 
     for ii, sample in enumerate(dataloader):

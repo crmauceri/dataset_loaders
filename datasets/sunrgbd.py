@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from deeplab3.mypath import Path
 from tqdm import trange
 import os
 from pycocotools.coco import COCO
@@ -17,11 +16,11 @@ class RGBDSegmentation(Dataset):
     CAT_LIST = list(range(38))
 
     def __init__(self,
-                 args,
+                 cfg,
                  split='train',
                  use_depth=True):
         super().__init__()
-        base_dir = Path.db_root_dir(args.dataset)
+        base_dir = cfg.DATASET.ROOT
         ann_file = os.path.join(base_dir, 'annotations/instances_{}.json'.format(split))
         ids_file = os.path.join(base_dir, 'annotations/{}_ids.pth'.format(split))
         self.img_dir = os.path.join(base_dir, 'images')
@@ -43,7 +42,7 @@ class RGBDSegmentation(Dataset):
         else:
             ids = list(self.coco.imgs.keys())
             self.ids = self._preprocess(ids, ids_file)
-        self.args = args
+        self.cfg = cfg
 
     def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
@@ -110,7 +109,7 @@ class RGBDSegmentation(Dataset):
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
+            tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
@@ -120,7 +119,7 @@ class RGBDSegmentation(Dataset):
     def transform_val(self, sample):
 
         composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.args.crop_size),
+            tr.FixScaleCrop(crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
@@ -133,20 +132,32 @@ class RGBDSegmentation(Dataset):
 
 
 if __name__ == "__main__":
-    from dataloaders import custom_transforms as tr
-    from dataloaders.utils import decode_segmap
+    from deeplab3.config.defaults import get_cfg_defaults
+    from deeplab3.dataloaders import custom_transforms as tr
+    from deeplab3.dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     from torchvision import transforms
     import matplotlib.pyplot as plt
     import argparse
 
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    args.dataset = 'sunrgbd'
-    args.base_size = 513
-    args.crop_size = 513
+    parser = argparse.ArgumentParser(description="Test SUNRGBD Loader")
+    parser.add_argument('config_file', help='config file path')
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
 
-    coco_val = RGBDSegmentation(args, split='val', year='', use_depth=True)
+    args = parser.parse_args()
+
+    cfg = get_cfg_defaults()
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+    print(cfg)
+
+    coco_val = RGBDSegmentation(cfg, split='val', use_depth=True)
 
     dataloader = DataLoader(coco_val, batch_size=4, shuffle=True, num_workers=0)
 

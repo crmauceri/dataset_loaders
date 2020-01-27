@@ -3,18 +3,17 @@ import numpy as np
 import scipy.misc as m
 from PIL import Image
 from torch.utils import data
-from deeplab3.mypath import Path
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
 
 class CityscapesSegmentation(data.Dataset):
     NUM_CLASSES = 19
 
-    def __init__(self, args, root=Path.db_root_dir('cityscapes'), split="train"):
+    def __init__(self, cfg, split="train"):
 
-        self.root = root
+        self.root = cfg.DATASET.ROOT
         self.split = split
-        self.args = args
+        self.cfg = cfg
         self.files = {}
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
@@ -81,7 +80,7 @@ class CityscapesSegmentation(data.Dataset):
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size, fill=255),
+            tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE, fill=255),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
@@ -91,7 +90,7 @@ class CityscapesSegmentation(data.Dataset):
     def transform_val(self, sample):
 
         composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.args.crop_size),
+            tr.FixScaleCrop(crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
 
@@ -100,24 +99,37 @@ class CityscapesSegmentation(data.Dataset):
     def transform_ts(self, sample):
 
         composed_transforms = transforms.Compose([
-            tr.FixedResize(size=self.args.crop_size),
+            tr.FixedResize(crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
 
         return composed_transforms(sample)
 
 if __name__ == '__main__':
-    from dataloaders.utils import decode_segmap
+    from deeplab3.config.defaults import get_cfg_defaults
+    from deeplab3.dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse
 
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    args.base_size = 513
-    args.crop_size = 513
+    parser = argparse.ArgumentParser(description="Test cityscapes Loader")
+    parser.add_argument('config_file', help='config file path')
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
 
-    cityscapes_train = CityscapesSegmentation(args, split='train')
+    args = parser.parse_args()
+
+    cfg = get_cfg_defaults()
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+    print(cfg)
+
+    cityscapes_train = CityscapesSegmentation(cfg, split='train')
 
     dataloader = DataLoader(cityscapes_train, batch_size=2, shuffle=True, num_workers=2)
 

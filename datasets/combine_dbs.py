@@ -58,21 +58,35 @@ class CombineDBs(data.Dataset):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from dataloaders.datasets import pascal, sbd
-    from dataloaders import sbd
+    from deeplab3.dataloaders.datasets import pascal, sbd
+    from deeplab3.dataloaders import sbd
     import torch
     import numpy as np
-    from dataloaders.utils import decode_segmap
+    from deeplab3.dataloaders.utils import decode_segmap
     import argparse
 
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    args.base_size = 513
-    args.crop_size = 513
+    from deeplab3.config.defaults import get_cfg_defaults
 
-    pascal_voc_val = pascal.VOCSegmentation(args, split='val')
-    sbd = sbd.SBDSegmentation(args, split=['train', 'val'])
-    pascal_voc_train = pascal.VOCSegmentation(args, split='train')
+    parser = argparse.ArgumentParser(description="Test dbs Loader")
+    parser.add_argument('config_file', help='config file path')
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+
+    args = parser.parse_args()
+
+    cfg = get_cfg_defaults()
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+    print(cfg)
+
+    pascal_voc_val = pascal.VOCSegmentation(cfg, split='val')
+    sbd = sbd.SBDSegmentation(cfg, split=['train', 'val'])
+    pascal_voc_train = pascal.VOCSegmentation(cfg, split='train')
 
     dataset = CombineDBs([pascal_voc_train, sbd], excluded=[pascal_voc_val])
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=True, num_workers=0)

@@ -1,52 +1,52 @@
 from deeplab3.dataloaders.datasets import cityscapes, coco, combine_dbs, pascal, sbd, sunrgbd
 from torch.utils.data import DataLoader
 
-def make_data_loader(args, **kwargs):
+def make_data_loader(cfg, **kwargs):
 
-    if args.dataset == 'pascal':
-        if args.use_depth:
+    if cfg.DATASET.NAME == 'pascal':
+        if cfg.DATASET.USE_DEPTH:
             raise ValueError('RGBD DataLoader not implemented')
-        train_set = pascal.VOCSegmentation(args, split='train')
-        val_set = pascal.VOCSegmentation(args, split='val')
-        if args.use_sbd:
-            sbd_train = sbd.SBDSegmentation(args, split=['train', 'val'])
+        train_set = pascal.VOCSegmentation(cfg, split='train')
+        val_set = pascal.VOCSegmentation(cfg, split='val')
+        if cfg.DATASET.USE_SBD:
+            sbd_train = sbd.SBDSegmentation(cfg, split=['train', 'val'])
             train_set = combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
 
         num_class = train_set.NUM_CLASSES
-        train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-        val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, **kwargs)
+        train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
+        val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
         test_loader = None
 
         return train_loader, val_loader, test_loader, num_class
 
-    elif args.dataset == 'cityscapes':
-        if args.use_depth:
+    elif cfg.DATASET.NAME == 'cityscapes':
+        if cfg.DATASET.USE_DEPTH:
             raise ValueError('RGBD DataLoader not implemented')
-        train_set = cityscapes.CityscapesSegmentation(args, split='train')
-        val_set = cityscapes.CityscapesSegmentation(args, split='val')
-        test_set = cityscapes.CityscapesSegmentation(args, split='test')
+        train_set = cityscapes.CityscapesSegmentation(cfg, split='train')
+        val_set = cityscapes.CityscapesSegmentation(cfg, split='val')
+        test_set = cityscapes.CityscapesSegmentation(cfg, split='test')
         num_class = train_set.NUM_CLASSES
-        train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-        val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, **kwargs)
-        test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, **kwargs)
+        train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
+        val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
+        test_loader = DataLoader(test_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
 
         return train_loader, val_loader, test_loader, num_class
 
-    elif args.dataset == 'coco':
-        train_set = coco.COCOSegmentation(args, split='train', use_depth=args.use_depth)
-        val_set = coco.COCOSegmentation(args, split='val', use_depth=args.use_depth)
+    elif cfg.DATASET.NAME == 'coco':
+        train_set = coco.COCOSegmentation(cfg, split='train', use_depth=cfg.DATASET.USE_DEPTH)
+        val_set = coco.COCOSegmentation(cfg, split='val', use_depth=cfg.DATASET.USE_DEPTH)
         num_class = train_set.NUM_CLASSES
-        train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-        val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, **kwargs)
+        train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
+        val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
         test_loader = None
         return train_loader, val_loader, test_loader, num_class
 
-    elif args.dataset in ['sunrgbd', 'matterport3d']:
-        train_set = sunrgbd.RGBDSegmentation(args, split='train', use_depth=args.use_depth)
-        val_set = sunrgbd.RGBDSegmentation(args, split='val', use_depth=args.use_depth)
+    elif cfg.DATASET.NAME in ['sunrgbd', 'matterport3d']:
+        train_set = sunrgbd.RGBDSegmentation(cfg, split='train', use_depth=cfg.DATASET.USE_DEPTH)
+        val_set = sunrgbd.RGBDSegmentation(cfg, split='val', use_depth=cfg.DATASET.USE_DEPTH)
         num_class = train_set.NUM_CLASSES
-        train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, **kwargs)
-        val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, **kwargs)
+        train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
+        val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
         test_loader = None
         return train_loader, val_loader, test_loader, num_class
 

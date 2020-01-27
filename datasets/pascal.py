@@ -3,7 +3,6 @@ import os
 from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset
-from deeplab3.mypath import Path
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
 
@@ -14,8 +13,7 @@ class VOCSegmentation(Dataset):
     NUM_CLASSES = 21
 
     def __init__(self,
-                 args,
-                 base_dir=Path.db_root_dir('pascal'),
+                 cfg,
                  split='train',
                  ):
         """
@@ -24,7 +22,7 @@ class VOCSegmentation(Dataset):
         :param transform: transform to apply
         """
         super().__init__()
-        self._base_dir = base_dir
+        self._base_dir = cfg.DATASET.ROOT
         self._image_dir = os.path.join(self._base_dir, 'JPEGImages')
         self._cat_dir = os.path.join(self._base_dir, 'SegmentationClass')
 
@@ -34,7 +32,7 @@ class VOCSegmentation(Dataset):
             split.sort()
             self.split = split
 
-        self.args = args
+        self.cfg = cfg
 
         _splits_dir = os.path.join(self._base_dir, 'ImageSets', 'Segmentation')
 
@@ -84,7 +82,7 @@ class VOCSegmentation(Dataset):
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
+            tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
@@ -94,7 +92,7 @@ class VOCSegmentation(Dataset):
     def transform_val(self, sample):
 
         composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.args.crop_size),
+            tr.FixScaleCrop(crop_size=self.cfg.DATASET.CROP_SIZE),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
 
@@ -105,17 +103,30 @@ class VOCSegmentation(Dataset):
 
 
 if __name__ == '__main__':
-    from dataloaders.utils import decode_segmap
+    from deeplab3.config.defaults import get_cfg_defaults
+    from deeplab3.dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse
 
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    args.base_size = 513
-    args.crop_size = 513
+    parser = argparse.ArgumentParser(description="Test pascal Loader")
+    parser.add_argument('config_file', help='config file path')
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
 
-    voc_train = VOCSegmentation(args, split='train')
+    args = parser.parse_args()
+
+    cfg = get_cfg_defaults()
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+    print(cfg)
+
+    voc_train = VOCSegmentation(cfg, split='train')
 
     dataloader = DataLoader(voc_train, batch_size=5, shuffle=True, num_workers=0)
 
