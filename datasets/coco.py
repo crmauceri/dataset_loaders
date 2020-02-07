@@ -12,10 +12,6 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class COCOSegmentation(Dataset):
-    NUM_CLASSES = 21
-    CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4,
-        1, 64, 20, 63, 7, 72]
-
     def __init__(self,
                  cfg,
                  split='train',
@@ -29,6 +25,10 @@ class COCOSegmentation(Dataset):
         self.depth_dir = os.path.join(base_dir, 'VNL_Monocular/') #{}{}'.format(split, year))
         self.split = split
         self.coco = COCO(ann_file)
+        self.CAT_LIST = [0]
+        self.CAT_LIST.extend(list(self.coco.cats.keys()))
+        self.NUM_CLASSES = len(self.CAT_LIST)
+
         self.coco_mask = mask
         self.use_depth = use_depth
         if self.use_depth:
