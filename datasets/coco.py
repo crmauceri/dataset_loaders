@@ -16,7 +16,9 @@ class COCOSegmentation(Dataset):
                  cfg,
                  split='train',
                  year='2017',
-                 use_depth=True):
+                 use_depth=True,
+                 categories = 'coco', #['pascal', 'sunrgbd']
+                 ):
         super().__init__()
         base_dir = cfg.DATASET.ROOT
         ann_file = os.path.join(base_dir, 'annotations/instances_{}{}.json'.format(split, year))
@@ -25,8 +27,18 @@ class COCOSegmentation(Dataset):
         self.depth_dir = os.path.join(base_dir, 'VNL_Monocular/') #{}{}'.format(split, year))
         self.split = split
         self.coco = COCO(ann_file)
-        self.CAT_LIST = [0]
-        self.CAT_LIST.extend(list(self.coco.cats.keys()))
+
+        if categories == 'coco':
+            self.CAT_LIST = [0]
+            self.CAT_LIST.extend(list(self.coco.cats.keys()))
+        elif categories == 'pascal':
+            self.CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
+        elif categories == 'sunrgbd:':
+            # There is only partial overlap between these two category lists. This map indexes sunrgbd:coco
+            self.CAT_MAP = {0:0, 4:65, 5:62, 6:63, 7:67, 23:84, 24:82, 25:72, 31:1, 33:70, 34:81, 37:31}
+            self.CAT_LIST = list(self.CAT_MAP.values())
+        else:
+            raise ValueError('Category mapping to {} not implemented for COCOSegmentation'.format(categories))
         self.NUM_CLASSES = len(self.CAT_LIST)
 
         self.coco_mask = mask
