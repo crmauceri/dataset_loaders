@@ -70,7 +70,8 @@ def encode_segmap(mask):
 def sample_distribution(dataset):
     samples = []
     for i in np.random.choice(len(dataset), min(1000, len(dataset))):
-        img, labels = dataset.__getitem__(i, no_transforms=True)
+        sample = dataset.__getitem__(i, no_transforms=True)
+        img = sample['img']
 
         #Flatten image
         img = np.reshape(img, (img.shape[0]*img.shape[1], img.shape[2]))
