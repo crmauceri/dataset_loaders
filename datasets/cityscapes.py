@@ -14,10 +14,22 @@ class CityscapesSegmentation(data.Dataset):
         self.root = cfg.DATASET.ROOT
         self.split = split
         self.cfg = cfg
+        self.use_depth = cfg.DATASET.USE_DEPTH
+        if self.use_depth:
+            print('Using RGB-D input')
+            self.data_mean = (0.485, 0.456, 0.406, 0.213)
+            self.data_std = (0.229, 0.224, 0.225, 0.111)
+        else:
+            print('Using RGB input')
+            self.data_mean = (0.485, 0.456, 0.406)
+            self.data_std = (0.229, 0.224, 0.225)
+
+
         self.files = {}
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
-        self.annotations_base = os.path.join(self.root, 'gtFine_trainvaltest', 'gtFine', self.split)
+        self.annotations_base = os.path.join(self.root, 'gtCoarse', self.split)
+        self.depth_base = os.path.join(self.root, 'disparity', self.split)  # {}{}'.format(split, year))
 
         self.files[split] = self.recursive_glob(rootdir=self.images_base, suffix='.png')
 
@@ -44,9 +56,16 @@ class CityscapesSegmentation(data.Dataset):
         img_path = self.files[self.split][index].rstrip()
         lbl_path = os.path.join(self.annotations_base,
                                 img_path.split(os.sep)[-2],
-                                os.path.basename(img_path)[:-15] + 'gtFine_labelIds.png')
+                                os.path.basename(img_path)[:-15] + 'gtCoarse_labelIds.png')
+        depth_path = os.path.join(self.depth_base,
+                                img_path.split(os.sep)[-2],
+                                os.path.basename(img_path)[:-15] + 'disparity.png')
 
         _img = Image.open(img_path).convert('RGB')
+        if self.use_depth:
+            _depth = Image.open(depth_path).convert('L')
+            _img.putalpha(_depth)
+
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
         _tmp = self.encode_segmap(_tmp)
         _target = Image.fromarray(_tmp)
@@ -82,7 +101,7 @@ class CityscapesSegmentation(data.Dataset):
             tr.RandomHorizontalFlip(),
             tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE, fill=255),
             tr.RandomGaussianBlur(),
-            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
         return composed_transforms(sample)
@@ -91,7 +110,7 @@ class CityscapesSegmentation(data.Dataset):
 
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.cfg.DATASET.CROP_SIZE),
-            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
         return composed_transforms(sample)
@@ -100,7 +119,7 @@ class CityscapesSegmentation(data.Dataset):
 
         composed_transforms = transforms.Compose([
             tr.FixedResize(crop_size=self.cfg.DATASET.CROP_SIZE),
-            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
         return composed_transforms(sample)
@@ -140,8 +159,8 @@ if __name__ == '__main__':
             tmp = np.array(gt[jj]).astype(np.uint8)
             segmap = decode_segmap(tmp, dataset='cityscapes')
             img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
-            img_tmp *= (0.229, 0.224, 0.225)
-            img_tmp += (0.485, 0.456, 0.406)
+            img_tmp *= cityscapes_train.data_std
+            img_tmp += cityscapes_train.data_mean
             img_tmp *= 255.0
             img_tmp = img_tmp.astype(np.uint8)
             plt.figure()
