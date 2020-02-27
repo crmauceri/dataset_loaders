@@ -51,7 +51,7 @@ class CityscapesSegmentation(data.Dataset):
     def __len__(self):
         return len(self.files[self.split])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index, no_transforms=False):
 
         img_path = self.files[self.split][index].rstrip()
         lbl_path = os.path.join(self.annotations_base,
@@ -71,6 +71,8 @@ class CityscapesSegmentation(data.Dataset):
         _target = Image.fromarray(_tmp)
 
         sample = {'image': _img, 'label': _target}
+        if no_transforms:
+            return sample
 
         if self.split == 'train':
             return self.transform_tr(sample)

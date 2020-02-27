@@ -67,6 +67,19 @@ def encode_segmap(mask):
     label_mask = label_mask.astype(int)
     return label_mask
 
+def sample_distribution(dataset):
+    samples = []
+    for i in np.random.choice(len(dataset), min(1000, len(dataset))):
+        img, labels = dataset.__getitem__(i, no_transforms=True)
+
+        #Flatten image
+        img = np.reshape(img, (img.shape[0]*img.shape[1], img.shape[2]))
+        pixel_i = np.random.choice(img.shape[0], 100)
+        samples.append(img[pixel_i, :])
+
+    mean = np.mean(samples)
+    std = np.std(samples)
+    return {'mean': mean, 'std': std}
 
 def get_cityscapes_labels():
     return np.array([

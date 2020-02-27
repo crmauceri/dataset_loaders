@@ -58,9 +58,12 @@ class COCOSegmentation(Dataset):
             self.ids = self._preprocess(ids, ids_file)
         self.cfg = cfg
 
-    def __getitem__(self, index):
+    def __getitem__(self, index, no_transforms=False):
         _img, _target = self._make_img_gt_point_pair(index)
         sample = {'image': _img, 'label': _target}
+
+        if no_transforms:
+            return sample
 
         if self.split == "train":
             return self.transform_tr(sample)
