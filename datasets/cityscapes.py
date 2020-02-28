@@ -63,7 +63,9 @@ class CityscapesSegmentation(data.Dataset):
 
         _img = Image.open(img_path).convert('RGB')
         if self.use_depth:
-            _depth = Image.open(depth_path).convert('L')
+            _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
+            # _depth_arr /= 25000 * 256 # Empirically determined normalization value (2.5 std)
+            _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
             _img.putalpha(_depth)
 
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)

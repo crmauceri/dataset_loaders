@@ -68,6 +68,7 @@ def encode_segmap(mask):
     label_mask = label_mask.astype(int)
     return label_mask
 
+
 def sample_distribution(dataset):
     n = min(1000, len(dataset))
     m = 100
@@ -85,7 +86,16 @@ def sample_distribution(dataset):
 
     mean = np.mean(samples, axis=0)
     std = np.std(samples, axis=0)
-    return {'mean': mean, 'std': std}
+    m_max = np.max(samples, axis=0)
+
+    if dataset.use_depth:
+        import matplotlib.pyplot as plt
+        plt.hist(samples[:, -1], bins='auto')
+        plt.title("Depth histogram")
+        plt.show()
+
+    return {'mean': mean, 'std': std, 'max': m_max}
+
 
 def get_cityscapes_labels():
     return np.array([
