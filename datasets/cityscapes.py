@@ -17,8 +17,8 @@ class CityscapesSegmentation(data.Dataset):
         self.use_depth = cfg.DATASET.USE_DEPTH
         if self.use_depth:
             print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.797)
-            self.data_std = (0.229, 0.224, 0.225, 0.395)
+            self.data_mean = (0.485, 0.456, 0.406, 0.300)
+            self.data_std = (0.229, 0.224, 0.225, 0.295)
         else:
             print('Using RGB input')
             self.data_mean = (0.485, 0.456, 0.406)
