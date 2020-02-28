@@ -20,8 +20,6 @@ def make_data_loader(cfg, **kwargs):
         return train_loader, val_loader, test_loader, num_class
 
     elif cfg.DATASET.NAME == 'cityscapes':
-        if cfg.DATASET.USE_DEPTH:
-            raise ValueError('RGBD DataLoader not implemented')
         train_set = cityscapes.CityscapesSegmentation(cfg, split='train')
         val_set = cityscapes.CityscapesSegmentation(cfg, split='val')
         test_set = cityscapes.CityscapesSegmentation(cfg, split='test')
