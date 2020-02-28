@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from tqdm import tqdm
 
 def decode_seg_map_sequence(label_masks, dataset='pascal'):
     rgb_masks = []
@@ -68,18 +69,22 @@ def encode_segmap(mask):
     return label_mask
 
 def sample_distribution(dataset):
-    samples = []
-    for i in np.random.choice(len(dataset), min(1000, len(dataset))):
+    n = min(1000, len(dataset))
+    m = 100
+    channels = 4 if dataset.use_depth else 3
+    samples = np.zeros((m*n,channels))
+    for it, i in tqdm(enumerate(np.random.choice(len(dataset), n))):
         sample = dataset.__getitem__(i, no_transforms=True)
-        img = sample['image']
+        img = np.asarray(sample['image'])
 
         #Flatten image
         img = np.reshape(img, (img.shape[0]*img.shape[1], img.shape[2]))
-        pixel_i = np.random.choice(img.shape[0], 100)
-        samples.append(img[pixel_i, :])
+        if img.shape[0]>m:
+            pixel_i = np.random.choice(img.shape[0], m)
+            samples[it*m:(it+1)*m,:] = img[pixel_i, :]
 
-    mean = np.mean(samples)
-    std = np.std(samples)
+    mean = np.mean(samples, axis=0)
+    std = np.std(samples, axis=0)
     return {'mean': mean, 'std': std}
 
 def get_cityscapes_labels():
