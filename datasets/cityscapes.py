@@ -76,7 +76,7 @@ class CityscapesSegmentation(data.Dataset):
         if no_transforms:
             return sample
 
-        if self.split == 'train':
+        if self.split in ['train', 'train_extra']:
             return self.transform_tr(sample)
         elif self.split == 'val':
             return self.transform_val(sample)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     cfg.freeze()
     print(cfg)
 
-    cityscapes_train = CityscapesSegmentation(cfg, split='train')
+    cityscapes_train = CityscapesSegmentation(cfg, split='train_extra')
 
     dataloader = DataLoader(cityscapes_train, batch_size=2, shuffle=True, num_workers=2)
 
