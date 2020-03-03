@@ -20,7 +20,7 @@ def make_data_loader(cfg, **kwargs):
         return train_loader, val_loader, test_loader, num_class
 
     elif cfg.DATASET.NAME == 'cityscapes':
-        train_set = cityscapes.CityscapesSegmentation(cfg, split='train')
+        train_set = cityscapes.CityscapesSegmentation(cfg, split='train_extra')
         val_set = cityscapes.CityscapesSegmentation(cfg, split='val')
         test_set = cityscapes.CityscapesSegmentation(cfg, split='test')
         num_class = train_set.NUM_CLASSES
