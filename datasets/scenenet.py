@@ -27,10 +27,14 @@ class SceneNetSegmentation(data.Dataset):
             self.data_std = (0.229, 0.224, 0.225)
 
         if split=="train":
-            protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(i)) for i in range(1)]
+            protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(1))] #TODO Use all trajectories # for i in range(1,2)]
             self.root = os.path.join(cfg.DATASET.ROOT, 'train')
         elif split=="val":
             protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'scenenet_rgbd_val.pb')]
+            self.root = os.path.join(cfg.DATASET.ROOT, 'val')
+        elif split=="test":
+            # Reserve the 1st training partition as a test set
+            protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(0))]
             self.root = os.path.join(cfg.DATASET.ROOT, 'val')
         else:
             raise ValueError("SceneNet split {} not implemented".format(split))
