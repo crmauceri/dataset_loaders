@@ -5,10 +5,10 @@ from PIL import Image
 from torch.utils import data
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
-import scenenet_pb2 as sn
+import deeplab3.dataloaders.datasets.scenenet_pb2 as sn
 
 class SceneNetSegmentation(data.Dataset):
-    NUM_CLASSES = 13
+    NUM_CLASSES = 14
 
     def __init__(self, cfg, split="train"):
 

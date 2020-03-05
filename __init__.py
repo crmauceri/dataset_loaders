@@ -31,9 +31,9 @@ def make_data_loader(cfg, **kwargs):
         return train_loader, val_loader, test_loader, num_class
 
     elif cfg.DATASET.NAME == 'scenenet':
-        train_set = scenenet.ScenenetSegmentation(cfg, split='train')
-        val_set = scenenet.ScenenetSegmentation(cfg, split='val')
-        test_set =  val_set # scenenet.ScenenetSegmentation(cfg, split='test') #TODO Make seperate test set
+        train_set = scenenet.SceneNetSegmentation(cfg, split='train')
+        val_set = scenenet.SceneNetSegmentation(cfg, split='val')
+        test_set =  val_set # scenenet.SceneNetSegmentation(cfg, split='test') #TODO Make seperate test set
         num_class = train_set.NUM_CLASSES
         train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
         val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
