@@ -31,6 +31,9 @@ def decode_segmap(label_mask, dataset, plot=False):
     elif dataset == 'sunrgbd':
         n_classes = 38
         label_colours = get_sunrgbd_labels()
+    elif dataset == 'scenenet':
+        n_classes = 13
+        label_colours = get_nyu13_labels()
     else:
         raise NotImplementedError
 
@@ -144,3 +147,19 @@ def get_pascal_labels():
                        [64, 0, 128], [192, 0, 128], [64, 128, 128], [192, 128, 128],
                        [0, 64, 0], [128, 64, 0], [0, 192, 0], [128, 192, 0],
                        [0, 64, 128]])
+
+def get_nyu13_labels():
+    return np.array([[  0,   0,   0],
+       [  0,   0, 255], #BED
+       [232,  88,  47], #BOOKS
+       [  0, 217,   0], #CEILING
+       [148,   0, 240], #CHAIR
+       [222, 241,  23], #FLOOR
+       [255, 205, 205], #FURNITURE
+       [  0, 223, 228], #OBJECTS
+       [106, 135, 204], #PAINTING
+       [116,  28,  41], #SOFA
+       [240,  35, 235], #TABLE
+       [  0, 166, 156], #TV
+       [249, 139,   0], #WALL
+       [225, 228, 194]])  #WINDOWS
