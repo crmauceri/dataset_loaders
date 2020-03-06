@@ -40,6 +40,7 @@ class COCOSegmentation(Dataset):
         else:
             raise ValueError('Category mapping to {} not implemented for COCOSegmentation'.format(categories))
         self.NUM_CLASSES = len(self.CAT_LIST)
+        self.class_names = [self.coco.cats[i]['name'] for i in self.CAT_LIST[1:]]
 
         self.coco_mask = mask
         self.use_depth = use_depth
