@@ -42,8 +42,8 @@ def make_data_loader(cfg, **kwargs):
         return train_loader, val_loader, test_loader, num_class
 
     elif cfg.DATASET.NAME == 'coco':
-        train_set = coco.COCOSegmentation(cfg, split='train', use_depth=cfg.DATASET.USE_DEPTH)
-        val_set = coco.COCOSegmentation(cfg, split='val', use_depth=cfg.DATASET.USE_DEPTH)
+        train_set = coco.COCOSegmentation(cfg, split='train', use_depth=cfg.DATASET.USE_DEPTH, categories=cfg.DATASET.COCO.CATEGORIES)
+        val_set = coco.COCOSegmentation(cfg, split='val', use_depth=cfg.DATASET.USE_DEPTH, categories=cfg.DATASET.COCO.CATEGORIES)
         num_class = train_set.NUM_CLASSES
         train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
         val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
