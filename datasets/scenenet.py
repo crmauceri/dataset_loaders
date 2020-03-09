@@ -4,6 +4,7 @@ import scipy.misc as m
 from PIL import Image
 from torch.utils import data
 from torchvision import transforms
+from warnings import warn
 from deeplab3.dataloaders import custom_transforms as tr
 import deeplab3.dataloaders.datasets.scenenet_pb2 as sn
 
@@ -72,16 +73,23 @@ class SceneNetSegmentation(data.Dataset):
         lbl_path = self.dataset[index]['lbl_path']
         depth_path = self.dataset[index]['depth_path']
 
-        _img = Image.open(img_path).convert('RGB')
-        if self.use_depth:
-            _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
-            # _depth_arr /= 25000 * 256 # Empirically determined normalization value (2.5 std)
-            _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
-            _img.putalpha(_depth)
+        try:
+            _img = Image.open(img_path).convert('RGB')
+            _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
+            _tmp = self.encode_segmap(_tmp)
+            _target = Image.fromarray(_tmp)
 
-        _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
-        _tmp = self.encode_segmap(_tmp)
-        _target = Image.fromarray(_tmp)
+            if self.use_depth:
+                _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
+                # _depth_arr /= 25000 * 256 # Empirically determined normalization value (2.5 std)
+                _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
+                _img.putalpha(_depth)
+        except IOError as e:
+            # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__
+            warn(e, category=RuntimeWarning)
+            _img = Image.fromarray(np.zeros(()) if self.use_depth else np.zeros(()))
+            _target = np.zeros((), dtype=np.uint8)
+
 
         sample = {'image': _img, 'label': _target}
         if no_transforms:
