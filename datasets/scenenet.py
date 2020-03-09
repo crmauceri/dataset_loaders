@@ -30,7 +30,7 @@ class SceneNetSegmentation(data.Dataset):
             protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(1))] #TODO Use all trajectories # for i in range(1,2)]
             self.root = os.path.join(cfg.DATASET.ROOT, 'train')
         elif split=="val":
-            protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'scenenet_rgbd_val.pb')]
+            protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'scenenet_rgbd_val.pb.filtered')]
             self.root = os.path.join(cfg.DATASET.ROOT, 'val')
         elif split=="test":
             # Reserve the 1st training partition as a test set
