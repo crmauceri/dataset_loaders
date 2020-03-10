@@ -27,8 +27,9 @@ class CityscapesSegmentation(data.Dataset):
 
         self.files = {}
 
+
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
-        self.annotations_base = os.path.join(self.root, 'gtCoarse', self.split)
+        self.annotations_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.GT_MODE, self.split)
         self.depth_base = os.path.join(self.root, 'disparity', self.split)  # {}{}'.format(split, year))
 
         # 'troisdorf_000000_000073' is corrupted
