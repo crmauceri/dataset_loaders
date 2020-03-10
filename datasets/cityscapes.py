@@ -58,7 +58,7 @@ class CityscapesSegmentation(data.Dataset):
         img_path = self.files[self.split][index].rstrip()
         lbl_path = os.path.join(self.annotations_base,
                                 img_path.split(os.sep)[-2],
-                                os.path.basename(img_path)[:-15] + 'gtCoarse_labelIds.png')
+                                os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(self.cfg.DATASET.CITYSCAPES.GT_MODE))
         depth_path = os.path.join(self.depth_base,
                                 img_path.split(os.sep)[-2],
                                 os.path.basename(img_path)[:-15] + 'disparity.png')
