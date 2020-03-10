@@ -27,6 +27,9 @@ class RGBDSegmentation(Dataset):
         self.depth_dir = self.img_dir
         self.split = split
         self.coco = COCO(ann_file)
+
+        self.class_names = [self.coco.cats[i]['name'] for i in self.CAT_LIST]
+
         self.coco_mask = mask
         self.use_depth = use_depth
         if self.use_depth:
