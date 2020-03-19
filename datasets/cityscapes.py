@@ -30,7 +30,7 @@ class CityscapesSegmentation(data.Dataset):
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
         self.annotations_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.GT_MODE, self.split)
-        if cfg.DATASET.CITYSCAPES.DEPTH_SOURCE == 'disparity':
+        if cfg.DATASET.CITYSCAPES.DEPTH_DIR == 'disparity':
             self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_DIR, self.split)  # {}{}'.format(split, year))
         else:
             self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_DIR)
