@@ -30,7 +30,10 @@ class CityscapesSegmentation(data.Dataset):
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
         self.annotations_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.GT_MODE, self.split)
-        self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_SOURCE, self.split)  # {}{}'.format(split, year))
+        if cfg.DATASET.CITYSCAPES.DEPTH_SOURCE == 'disparity':
+            self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_SOURCE, self.split)  # {}{}'.format(split, year))
+        else:
+            self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_SOURCE)
 
         # 'troisdorf_000000_000073' is corrupted
         self.files[split] = [x for x in self.recursive_glob(rootdir=self.images_base, suffix='.png') if 'troisdorf_000000_000073' not in x]
@@ -59,9 +62,13 @@ class CityscapesSegmentation(data.Dataset):
         lbl_path = os.path.join(self.annotations_base,
                                 img_path.split(os.sep)[-2],
                                 os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(self.cfg.DATASET.CITYSCAPES.GT_MODE))
-        depth_path = os.path.join(self.depth_base,
-                                img_path.split(os.sep)[-2],
-                                os.path.basename(img_path)[:-15] + 'disparity.png')
+        if self.cfg.DATASET.CITYSCAPES.SYNTHETIC_DEPTH:
+            depth_path = os.path.join(self.depth_base,
+                                      os.path.basename(img_path))
+        else:
+            depth_path = os.path.join(self.depth_base,
+                                    img_path.split(os.sep)[-2],
+                                    os.path.basename(img_path)[:-15] + 'disparity.png')
 
         _img = Image.open(img_path).convert('RGB')
         if self.use_depth:
