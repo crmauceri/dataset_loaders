@@ -30,7 +30,7 @@ class CityscapesSegmentation(data.Dataset):
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
         self.annotations_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.GT_MODE, self.split)
-        self.depth_base = os.path.join(self.root, 'disparity', self.split)  # {}{}'.format(split, year))
+        self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_SOURCE, self.split)  # {}{}'.format(split, year))
 
         # 'troisdorf_000000_000073' is corrupted
         self.files[split] = [x for x in self.recursive_glob(rootdir=self.images_base, suffix='.png') if 'troisdorf_000000_000073' not in x]
