@@ -26,18 +26,16 @@ class CityscapesSegmentation(data.Dataset):
             self.data_std = (0.229, 0.224, 0.225)
         elif self.mode == "RGB_HHA":
             print('Using RGB HHA input')
-            self.data_mean = (0.485, 0.456, 0.406)
-            self.data_std = (0.229, 0.224, 0.225)
+            self.data_mean = (0.485, 0.456, 0.406, 0.485, 0.456, 0.406) #TODO check these
+            self.data_std = (0.229, 0.224, 0.225, 0.485, 0.456, 0.406)
 
         self.files = {}
 
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
         self.annotations_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.GT_MODE, self.split)
-        if cfg.DATASET.CITYSCAPES.DEPTH_DIR == 'disparity':
-            self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_DIR, self.split)  # {}{}'.format(split, year))
-        else:
-            self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_DIR)
+        self.depth_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.DEPTH_DIR, self.split)  # {}{}'.format(split, year))
+
 
         # 'troisdorf_000000_000073' is corrupted
         self.files[split] = [x for x in self.recursive_glob(rootdir=self.images_base, suffix='.png') if 'troisdorf_000000_000073' not in x]
@@ -66,13 +64,10 @@ class CityscapesSegmentation(data.Dataset):
         lbl_path = os.path.join(self.annotations_base,
                                 img_path.split(os.sep)[-2],
                                 os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(self.cfg.DATASET.CITYSCAPES.GT_MODE))
-        if self.cfg.DATASET.CITYSCAPES.SYNTHETIC_DEPTH:
-            depth_path = os.path.join(self.depth_base,
-                                      os.path.basename(img_path))
-        else:
-            depth_path = os.path.join(self.depth_base,
-                                    img_path.split(os.sep)[-2],
-                                    os.path.basename(img_path)[:-15] + 'disparity.png')
+
+        depth_path = os.path.join(self.depth_base,
+                                img_path.split(os.sep)[-2],
+                                os.path.basename(img_path)[:-15] + '{}.png'.format(self.cfg.DATASET.CITYSCAPES.DEPTH_DIR))
 
         _img = Image.open(img_path).convert('RGB')
         if self.mode == 'RGBD':
@@ -82,6 +77,7 @@ class CityscapesSegmentation(data.Dataset):
             _img.putalpha(_depth)
         elif self.mode == "RGB_HHA":
             _hha = Image.open(depth_path).convert('RGB')
+            _img = [_img, _hha]
 
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
         _tmp = self.encode_segmap(_tmp)
@@ -145,7 +141,7 @@ class CityscapesSegmentation(data.Dataset):
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults
-    from deeplab3.dataloaders.utils import decode_segmap
+    from deeplab3.dataloaders.utils import decode_segmap, sample_distribution
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse
@@ -167,30 +163,37 @@ if __name__ == '__main__':
     cfg.freeze()
     print(cfg)
 
-    cityscapes_train = CityscapesSegmentation(cfg, split='train_extra')
+    cityscapes_train = CityscapesSegmentation(cfg, split='val')
 
     dataloader = DataLoader(cityscapes_train, batch_size=2, shuffle=True, num_workers=2)
 
-    for ii, sample in enumerate(dataloader):
-        for jj in range(sample["image"].size()[0]):
-            img = sample['image'].numpy()
-            gt = sample['label'].numpy()
-            tmp = np.array(gt[jj]).astype(np.uint8)
-            segmap = decode_segmap(tmp, dataset='cityscapes')
-            img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
-            img_tmp *= cityscapes_train.data_std
-            img_tmp += cityscapes_train.data_mean
-            img_tmp *= 255.0
-            img_tmp = img_tmp.astype(np.uint8)
-            plt.figure()
-            plt.title('display')
-            plt.subplot(211)
-            plt.imshow(img_tmp)
-            plt.subplot(212)
-            plt.imshow(segmap)
+    # for ii, sample in enumerate(dataloader):
+    #     for jj in range(sample["image"].size()[0]):
+    #         try:
+    #             img = sample['image'].numpy()
+    #             gt = sample['label'].numpy()
+    #             tmp = np.array(gt[jj]).astype(np.uint8)
+    #             segmap = decode_segmap(tmp, dataset='cityscapes')
+    #             img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
+    #             img_tmp *= cityscapes_train.data_std
+    #             img_tmp += cityscapes_train.data_mean
+    #             img_tmp *= 255.0
+    #             img_tmp = img_tmp.astype(np.uint8)
+    #             plt.figure()
+    #             plt.title('display')
+    #             plt.subplot(131)
+    #             plt.imshow(img_tmp[:, :, :3])
+    #             plt.subplot(132)
+    #             plt.imshow(img_tmp[:, :, 3:])
+    #             plt.subplot(133)
+    #             plt.imshow(segmap)
+    #         except SystemError as e:
+    #             print(e)
+    #
+    #     if ii == 1:
+    #         break
+    #
+    # plt.show()
 
-        if ii == 1:
-            break
-
-    plt.show(block=True)
+    print(sample_distribution(cityscapes_train))
 

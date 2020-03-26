@@ -92,7 +92,7 @@ class SceneNetSegmentation(data.Dataset):
                 _img.putalpha(_depth)
             elif self.mode == "RGB_HHA":
                 _hha = Image.open(depth_path).convert('RGB')
-                _img = (_img, _hha)
+                _img = [_img, _hha]
 
         except IOError as e:
             # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__

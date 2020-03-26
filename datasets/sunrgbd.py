@@ -75,7 +75,7 @@ class RGBDSegmentation(Dataset):
             _img.putalpha(_depth)
         elif self.mode == 'RGB_HHA':
             _hha = Image.open(os.path.join(self.depth_dir, path)).convert('RGB')
-            _img = (_img, _hha)
+            _img = [_img, _hha]
 
         cocotarget = coco.loadAnns(coco.getAnnIds(imgIds=img_id))
         _target = Image.fromarray(self._gen_seg_mask(

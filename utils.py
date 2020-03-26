@@ -88,7 +88,11 @@ def sample_distribution(dataset):
     samples = np.zeros((m*n,channels))
     for it, i in tqdm(enumerate(np.random.choice(len(dataset), n))):
         sample = dataset.__getitem__(i, no_transforms=True)
-        img = np.asarray(sample['image'])
+        if isinstance(sample['image'], list):
+            img = [np.asarray(img) for img in sample['image']]
+            img = np.concatenate(img, axis=2)
+        else:
+            img = np.asarray(sample['image'])
 
         #Flatten image
         img = np.reshape(img, (img.shape[0]*img.shape[1], img.shape[2]))
