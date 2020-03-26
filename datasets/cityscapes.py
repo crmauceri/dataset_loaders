@@ -14,16 +14,20 @@ class CityscapesSegmentation(data.Dataset):
         self.root = cfg.DATASET.ROOT
         self.split = split
         self.cfg = cfg
-        self.use_depth = cfg.DATASET.USE_DEPTH
-        if self.use_depth:
+
+        self.mode = cfg.DATASET.MODE
+        if self.mode == "RGBD":
             print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.300)
-            self.data_std = (0.229, 0.224, 0.225, 0.295)
-        else:
+            self.data_mean = (0.485, 0.456, 0.406, 0.213)
+            self.data_std = (0.229, 0.224, 0.225, 0.111)
+        elif self.mode == "RGB":
             print('Using RGB input')
             self.data_mean = (0.485, 0.456, 0.406)
             self.data_std = (0.229, 0.224, 0.225)
-
+        elif self.mode == "RGB_HHA":
+            print('Using RGB HHA input')
+            self.data_mean = (0.485, 0.456, 0.406)
+            self.data_std = (0.229, 0.224, 0.225)
 
         self.files = {}
 
@@ -71,11 +75,13 @@ class CityscapesSegmentation(data.Dataset):
                                     os.path.basename(img_path)[:-15] + 'disparity.png')
 
         _img = Image.open(img_path).convert('RGB')
-        if self.use_depth:
+        if self.mode == 'RGBD':
             _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
             # _depth_arr /= 25000 * 256 # Empirically determined normalization value (2.5 std)
             _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
             _img.putalpha(_depth)
+        elif self.mode == "RGB_HHA":
+            _hha = Image.open(depth_path).convert('RGB')
 
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
         _tmp = self.encode_segmap(_tmp)

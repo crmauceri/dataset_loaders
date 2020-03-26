@@ -17,8 +17,7 @@ class RGBDSegmentation(Dataset):
 
     def __init__(self,
                  cfg,
-                 split='train',
-                 use_depth=True):
+                 split='train'):
         super().__init__()
         base_dir = cfg.DATASET.ROOT
         ann_file = os.path.join(base_dir, 'annotations/instances_{}.json'.format(split))
@@ -31,15 +30,20 @@ class RGBDSegmentation(Dataset):
         self.class_names = [self.coco.cats[i]['name'] for i in self.CAT_LIST]
 
         self.coco_mask = mask
-        self.use_depth = use_depth
-        if self.use_depth:
+        self.mode = cfg.DATASET.MODE
+        if self.mode == "RGBD":
             print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.213) #TODO adjust these means
+            self.data_mean = (0.485, 0.456, 0.406, 0.213)
             self.data_std = (0.229, 0.224, 0.225, 0.111)
-        else:
+        elif self.mode == "RGB":
             print('Using RGB input')
             self.data_mean = (0.485, 0.456, 0.406)
             self.data_std = (0.229, 0.224, 0.225)
+        elif self.mode == "RGB_HHA":
+            print('Using RGB HHA input')
+            self.data_mean = (0.485, 0.456, 0.406)
+            self.data_std = (0.229, 0.224, 0.225)
+
         if os.path.exists(ids_file):
             self.ids = torch.load(ids_file)
         else:
@@ -65,10 +69,14 @@ class RGBDSegmentation(Dataset):
         img_metadata = coco.loadImgs(img_id)[0]
         path = img_metadata['file_name']
         _img = Image.open(os.path.join(self.img_dir, path)).convert('RGB')
-        if self.use_depth:
+        if self.mode == "RGBD":
             depth_path = img_metadata['depth_file_name']
             _depth = Image.open(os.path.join(self.depth_dir, depth_path)).convert('L')
             _img.putalpha(_depth)
+        elif self.mode == 'RGB_HHA':
+            _hha = Image.open(os.path.join(self.depth_dir, path)).convert('RGB')
+            _img = (_img, _hha)
+
         cocotarget = coco.loadAnns(coco.getAnnIds(imgIds=img_id))
         _target = Image.fromarray(self._gen_seg_mask(
             cocotarget, img_metadata['height'], img_metadata['width']))
@@ -163,7 +171,7 @@ if __name__ == "__main__":
     cfg.freeze()
     print(cfg)
 
-    coco_val = RGBDSegmentation(cfg, split='val', use_depth=True)
+    coco_val = RGBDSegmentation(cfg, split='val')
 
     dataloader = DataLoader(coco_val, batch_size=4, shuffle=True, num_workers=0)
 

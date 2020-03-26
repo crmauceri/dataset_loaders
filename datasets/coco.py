@@ -16,8 +16,8 @@ class COCOSegmentation(Dataset):
                  cfg,
                  split='train',
                  year='2017',
-                 use_depth=True,
-                 categories = 'coco', #['pascal', 'sunrgbd']
+                 #use_depth=True,
+                 #categories = 'coco', #['pascal', 'sunrgbd']
                  ):
         super().__init__()
         base_dir = cfg.DATASET.ROOT
@@ -28,12 +28,12 @@ class COCOSegmentation(Dataset):
         self.split = split
         self.coco = COCO(ann_file)
 
-        if categories == 'coco':
+        if cfg.DATASET.COCO.CATEGORIES == 'coco':
             self.CAT_LIST = [0]
             self.CAT_LIST.extend(list(self.coco.cats.keys()))
-        elif categories == 'pascal':
+        elif cfg.DATASET.COCO.CATEGORIES == 'pascal':
             self.CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
-        elif categories == 'sunrgbd:':
+        elif cfg.DATASET.COCO.CATEGORIES == 'sunrgbd:':
             # There is only partial overlap between these two category lists. This map indexes sunrgbd:coco
             self.CAT_MAP = {0:0, 4:65, 5:62, 6:63, 7:67, 23:84, 24:82, 25:72, 31:1, 33:70, 34:81, 37:31}
             self.CAT_LIST = list(self.CAT_MAP.values())
@@ -43,15 +43,22 @@ class COCOSegmentation(Dataset):
         self.class_names = ['unknown'] + [self.coco.cats[i]['name'] for i in self.CAT_LIST[1:]]
 
         self.coco_mask = mask
-        self.use_depth = use_depth
-        if self.use_depth:
+        self.mode = cfg.DATASET.MODE
+        if self.mode == "RGBD":
             print('Using RGB-D input')
             self.data_mean = (0.485, 0.456, 0.406, 0.213)
             self.data_std = (0.229, 0.224, 0.225, 0.111)
-        else:
+        elif self.mode == "RGB":
             print('Using RGB input')
             self.data_mean = (0.485, 0.456, 0.406)
             self.data_std = (0.229, 0.224, 0.225)
+        elif self.mode == "RGB_HHA":
+            print('Using RGB HHA input')
+            self.data_mean = (0.485, 0.456, 0.406)
+            self.data_std = (0.229, 0.224, 0.225)
+        else:
+            raise ValueError('Data mode not implemented: {}'.format(self.mode))
+
         if os.path.exists(ids_file):
             self.ids = torch.load(ids_file)
         else:
@@ -77,9 +84,13 @@ class COCOSegmentation(Dataset):
         img_metadata = coco.loadImgs(img_id)[0]
         path = img_metadata['file_name']
         _img = Image.open(os.path.join(self.img_dir, path)).convert('RGB')
-        if self.use_depth:
+        if self.mode == 'RGBD':
             _depth = Image.open(os.path.join(self.depth_dir, path)).convert('L')
             _img.putalpha(_depth)
+        elif self.mode == 'RGB_HHA':
+            _hha = Image.open(os.path.join(self.depth_dir, path)).convert('RGB')
+            _img = (_img, _hha)
+
         cocotarget = coco.loadAnns(coco.getAnnIds(imgIds=img_id))
         _target = Image.fromarray(self._gen_seg_mask(
             cocotarget, img_metadata['height'], img_metadata['width']))
@@ -174,7 +185,7 @@ if __name__ == "__main__":
     cfg.freeze()
     print(cfg)
 
-    coco_val = COCOSegmentation(cfg, split='val', year='2017', use_depth=True)
+    coco_val = COCOSegmentation(cfg, split='val', year='2017')
 
     dataloader = DataLoader(coco_val, batch_size=4, shuffle=True, num_workers=0)
 

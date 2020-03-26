@@ -75,7 +75,16 @@ def encode_segmap(mask):
 def sample_distribution(dataset):
     n = min(1000, len(dataset))
     m = 100
-    channels = 4 if dataset.use_depth else 3
+
+    if dataset.mode == "RGBD":
+        channels = 4
+    elif dataset.mode == "RGB":
+        channels = 3
+    elif dataset.mode == "RGB_HHA":
+        channels = 6
+    else:
+        raise ValueError('Dataset mode not implemented: {}'.format(dataset.mode))
+
     samples = np.zeros((m*n,channels))
     for it, i in tqdm(enumerate(np.random.choice(len(dataset), n))):
         sample = dataset.__getitem__(i, no_transforms=True)
@@ -91,7 +100,7 @@ def sample_distribution(dataset):
     std = np.std(samples, axis=0)
     m_max = np.max(samples, axis=0)
 
-    if dataset.use_depth:
+    if dataset.mode == "RGBD":
         import matplotlib.pyplot as plt
         plt.hist(samples[:, -1], bins='auto')
         plt.title("Depth histogram")

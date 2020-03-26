@@ -15,17 +15,23 @@ class SceneNetSegmentation(data.Dataset):
 
         self.split = split
         self.cfg = cfg
-        self.use_depth = cfg.DATASET.USE_DEPTH
+        self.mode = cfg.DATASET.MODE
 
         #TODO check stats
-        if self.use_depth:
+        if self.mode=='RGBD':
             print('Using RGB-D input')
             self.data_mean = (0.485, 0.456, 0.406, 0.300)
             self.data_std = (0.229, 0.224, 0.225, 0.295)
-        else:
+        elif self.mode =='RGB':
             print('Using RGB input')
             self.data_mean = (0.485, 0.456, 0.406)
             self.data_std = (0.229, 0.224, 0.225)
+        elif self.mode == 'RGB_HHA':
+            print('Using RGB HHA input')
+            self.data_mean = (0.485, 0.456, 0.406)
+            self.data_std = (0.229, 0.224, 0.225)
+        else:
+            raise ValueError('Dataset mode not implemented: {}'.format(self.mode))
 
         if split=="train":
             protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(1))] #TODO Use all trajectories # for i in range(1,2)]
@@ -79,11 +85,15 @@ class SceneNetSegmentation(data.Dataset):
             _tmp = self.encode_segmap(_tmp)
             _target = Image.fromarray(_tmp)
 
-            if self.use_depth:
+            if self.mode == 'RGBD':
                 _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
                 # _depth_arr /= 25000 * 256 # Empirically determined normalization value (2.5 std)
                 _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
                 _img.putalpha(_depth)
+            elif self.mode == "RGB_HHA":
+                _hha = Image.open(depth_path).convert('RGB')
+                _img = (_img, _hha)
+
         except IOError as e:
             # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__
             warn(e, category=RuntimeWarning)
