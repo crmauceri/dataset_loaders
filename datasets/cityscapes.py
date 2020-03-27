@@ -18,16 +18,16 @@ class CityscapesSegmentation(data.Dataset):
         self.mode = cfg.DATASET.MODE
         if self.mode == "RGBD":
             print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.213)
-            self.data_std = (0.229, 0.224, 0.225, 0.111)
+            self.data_mean = (0.485, 0.456, 0.406, 0.213) # TODO Cityscapes stats are [ 0.29089086,  0.32946742,  0.29078867,  0.29811586]
+            self.data_std = (0.229, 0.224, 0.225, 0.111) # TODO [ 0.19013525,  0.19000581,  0.18482447,  0.29437588]
         elif self.mode == "RGB":
             print('Using RGB input')
             self.data_mean = (0.485, 0.456, 0.406)
             self.data_std = (0.229, 0.224, 0.225)
         elif self.mode == "RGB_HHA":
             print('Using RGB HHA input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.485, 0.456, 0.406) #TODO check these
-            self.data_std = (0.229, 0.224, 0.225, 0.485, 0.456, 0.406)
+            self.data_mean = (0.294,  0.332,  0.293,  0.425,  0.825, 0.648)
+            self.data_std = ( 0.192,  0.193,  0.188,  0.374,  0.198, 0.187)
 
         self.files = {}
 
