@@ -7,6 +7,7 @@ from torchvision import transforms
 from warnings import warn
 from deeplab3.dataloaders import custom_transforms as tr
 import deeplab3.dataloaders.datasets.scenenet_pb2 as sn
+from deeplab3.dataloaders.datasets.cityscapes import CityscapesSampleLoader
 
 class SceneNetSegmentation(data.Dataset):
     NUM_CLASSES = 14
@@ -61,12 +62,7 @@ class SceneNetSegmentation(data.Dataset):
                 print('Scenenet protobuf data not found at location:{0}'.format(protobuf_path))
                 print('Please ensure you have copied the pb file to the data directory')
 
-        self.void_classes = [0]
-        self.valid_classes = range(1, 13)
-        self.class_names = ['bed', 'books', 'ceiling', 'chair', 'floor', 'furniture', 'objects', 'picture', 'sofa', 'table', 'tv', 'wall', 'window']
-
-        self.ignore_index = 255
-        self.class_map = dict(zip(self.valid_classes, range(self.NUM_CLASSES)))
+        self.loader = ScenenetSegmentationLoader(cfg, split)
 
         print("Found %d %s images" % (len(self.dataset), split))
 
@@ -80,82 +76,31 @@ class SceneNetSegmentation(data.Dataset):
         depth_path = self.dataset[index]['depth_path']
 
         try:
-            _img = Image.open(img_path).convert('RGB')
-            _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
-            _tmp = self.encode_segmap(_tmp)
-            _target = Image.fromarray(_tmp)
-
-            if self.mode == 'RGBD':
-                _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
-                # _depth_arr /= 25000 * 256 # Empirically determined normalization value (2.5 std)
-                _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
-                _img.putalpha(_depth)
-            elif self.mode == "RGB_HHA":
-                _hha = Image.open(depth_path).convert('RGB')
-                _img = [_img, _hha]
+            sample = self.loader(img_path, lbl_path, depth_path, no_transforms=no_transforms)
 
         except IOError as e:
             # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__
             warn(e, category=RuntimeWarning)
             _img = Image.fromarray(np.zeros(()) if self.use_depth else np.zeros(()))
             _target = np.zeros((), dtype=np.uint8)
+            sample = {'image': _img, 'label': _target}
+
+        return sample
 
 
-        sample = {'image': _img, 'label': _target}
-        if no_transforms:
-            return sample
+class ScenenetSegmentationLoader(CityscapesSampleLoader):
 
-        if self.split == 'train':
-            return self.transform_tr(sample)
-        elif self.split == 'val':
-            return self.transform_val(sample)
-        elif self.split == 'test':
-            return self.transform_ts(sample)
+    def __init__(self, cfg, split="train"):
+        super().__init__(cfg, split)
 
-    def encode_segmap(self, mask):
-        # Put all void classes to zero
-        for _voidc in self.void_classes:
-            mask[mask == _voidc] = self.ignore_index
-        for _validc in self.valid_classes:
-            mask[mask == _validc] = self.class_map[_validc]
-        return mask
+        self.void_classes = [0]
+        self.valid_classes = range(1, 13)
+        self.class_names = ['bed', 'books', 'ceiling', 'chair', 'floor', 'furniture', 'objects', 'picture', 'sofa',
+                            'table', 'tv', 'wall', 'window']
 
-    def recursive_glob(self, rootdir='.', suffix=''):
-        """Performs recursive glob with given suffix and rootdir
-            :param rootdir is the root directory
-            :param suffix is the suffix to be searched
-        """
-        return [os.path.join(looproot, filename)
-                for looproot, _, filenames in os.walk(rootdir)
-                for filename in filenames if filename.endswith(suffix)]
+        self.ignore_index = 255
+        self.class_map = dict(zip(self.valid_classes, range(self.NUM_CLASSES)))
 
-    def transform_tr(self, sample):
-        composed_transforms = transforms.Compose([
-            tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE, fill=255),
-            tr.RandomGaussianBlur(),
-            tr.Normalize(mean=self.data_mean, std=self.data_std),
-            tr.ToTensor()])
-
-        return composed_transforms(sample)
-
-    def transform_val(self, sample):
-
-        composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.cfg.DATASET.CROP_SIZE),
-            tr.Normalize(mean=self.data_mean, std=self.data_std),
-            tr.ToTensor()])
-
-        return composed_transforms(sample)
-
-    def transform_ts(self, sample):
-
-        composed_transforms = transforms.Compose([
-            tr.FixedResize(crop_size=self.cfg.DATASET.CROP_SIZE),
-            tr.Normalize(mean=self.data_mean, std=self.data_std),
-            tr.ToTensor()])
-
-        return composed_transforms(sample)
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults
@@ -192,8 +137,8 @@ if __name__ == '__main__':
             tmp = np.array(gt[jj]).astype(np.uint8)
             segmap = decode_segmap(tmp, dataset='scenenet')
             img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
-            img_tmp *= scenenet_train.data_std
-            img_tmp += scenenet_train.data_mean
+            img_tmp *= scenenet_train.loader.data_std
+            img_tmp += scenenet_train.loader.data_mean
             img_tmp *= 255.0
             img_tmp = img_tmp.astype(np.uint8)
             plt.figure()

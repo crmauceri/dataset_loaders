@@ -4,9 +4,10 @@ from torch.utils.data import Dataset
 from tqdm import trange
 import os
 from pycocotools.coco import COCO
-from pycocotools import mask
+from pycocotools import mask as Mask
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
+from deeplab3.dataloaders.SampleLoader import SampleLoader
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -38,26 +39,11 @@ class COCOSegmentation(Dataset):
             self.CAT_MAP = {0:0, 4:65, 5:62, 6:63, 7:67, 23:84, 24:82, 25:72, 31:1, 33:70, 34:81, 37:31}
             self.CAT_LIST = list(self.CAT_MAP.values())
         else:
-            raise ValueError('Category mapping to {} not implemented for COCOSegmentation'.format(categories))
+            raise ValueError('Category mapping to {} not implemented for COCOSegmentation'.format(cfg.DATASET.COCO.CATEGORIES))
         self.NUM_CLASSES = len(self.CAT_LIST)
         self.class_names = ['unknown'] + [self.coco.cats[i]['name'] for i in self.CAT_LIST[1:]]
 
-        self.coco_mask = mask
-        self.mode = cfg.DATASET.MODE
-        if self.mode == "RGBD":
-            print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.213)
-            self.data_std = (0.229, 0.224, 0.225, 0.111)
-        elif self.mode == "RGB":
-            print('Using RGB input')
-            self.data_mean = (0.485, 0.456, 0.406)
-            self.data_std = (0.229, 0.224, 0.225)
-        elif self.mode == "RGB_HHA":
-            print('Using RGB HHA input')
-            self.data_mean = (0.485, 0.456, 0.406)
-            self.data_std = (0.229, 0.224, 0.225)
-        else:
-            raise ValueError('Data mode not implemented: {}'.format(self.mode))
+        self.loader = COCOSegmentationSampleLoader(cfg, self.coco, split, self.CAT_LIST)
 
         if os.path.exists(ids_file):
             self.ids = torch.load(ids_file)
@@ -67,35 +53,17 @@ class COCOSegmentation(Dataset):
         self.cfg = cfg
 
     def __getitem__(self, index, no_transforms=False):
-        _img, _target = self._make_img_gt_point_pair(index)
-        sample = {'image': _img, 'label': _target}
-
-        if no_transforms:
-            return sample
-
-        if self.split == "train":
-            return self.transform_tr(sample)
-        elif self.split == 'val':
-            return self.transform_val(sample)
-
-    def _make_img_gt_point_pair(self, index):
         coco = self.coco
         img_id = self.ids[index]
         img_metadata = coco.loadImgs(img_id)[0]
         path = img_metadata['file_name']
-        _img = Image.open(os.path.join(self.img_dir, path)).convert('RGB')
-        if self.mode == 'RGBD':
-            _depth = Image.open(os.path.join(self.depth_dir, path)).convert('L')
-            _img.putalpha(_depth)
-        elif self.mode == 'RGB_HHA':
-            _hha = Image.open(os.path.join(self.depth_dir, path)).convert('RGB')
-            _img = [_img, _hha]
+        img_path = os.path.join(self.img_dir, path)
+        depth_path = os.path.join(self.depth_dir, path)
 
-        cocotarget = coco.loadAnns(coco.getAnnIds(imgIds=img_id))
-        _target = Image.fromarray(self._gen_seg_mask(
-            cocotarget, img_metadata['height'], img_metadata['width']))
+        return self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
 
-        return _img, _target
+    def __len__(self):
+        return len(self.ids)
 
     def _preprocess(self, ids, ids_file):
         print("Preprocessing mask, this will take a while. " + \
@@ -106,7 +74,7 @@ class COCOSegmentation(Dataset):
             img_id = ids[i]
             cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
             img_metadata = self.coco.loadImgs(img_id)[0]
-            mask = self._gen_seg_mask(cocotarget, img_metadata['height'],
+            mask = self.loader.gen_seg_mask(cocotarget, img_metadata['height'],
                                       img_metadata['width'])
             # more than 1k pixels
             if (mask > 0).sum() > 1000:
@@ -117,7 +85,23 @@ class COCOSegmentation(Dataset):
         torch.save(new_ids, ids_file)
         return new_ids
 
-    def _gen_seg_mask(self, target, h, w):
+class COCOSegmentationSampleLoader(SampleLoader):
+    def __init__(self, cfg, coco, split, cat_list):
+        super().__init__(cfg.DATASET.MODE, split,
+                         cfg.DATASET.BASE_SIZE, cfg.DATASET.CROP_SIZE)
+
+        self.coco = coco
+        self.coco_mask = Mask
+        self.CAT_LIST = cat_list
+
+    def getLabels(self, img_id):
+        img_metadata = self.coco.loadImgs(img_id)[0]
+        cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
+        _target = Image.fromarray(self.gen_seg_mask(
+            cocotarget, img_metadata['height'], img_metadata['width']))
+        return _target
+
+    def gen_seg_mask(self, target, h, w):
         mask = np.zeros((h, w), dtype=np.uint8)
         coco_mask = self.coco_mask
         for instance in target:
@@ -133,31 +117,6 @@ class COCOSegmentation(Dataset):
             else:
                 mask[:, :] += (mask == 0) * (((np.sum(m, axis=2)) > 0) * c).astype(np.uint8)
         return mask
-
-    def transform_tr(self, sample):
-        composed_transforms = transforms.Compose([
-            tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.cfg.DATASET.BASE_SIZE, crop_size=self.cfg.DATASET.CROP_SIZE),
-            tr.RandomGaussianBlur(),
-            tr.Normalize(mean=self.data_mean, std=self.data_std),
-            tr.ToTensor()])
-
-        return composed_transforms(sample)
-
-    def transform_val(self, sample):
-
-        composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.cfg.DATASET.CROP_SIZE),
-            tr.Normalize(mean=self.data_mean, std=self.data_std),
-            tr.ToTensor()])
-
-        return composed_transforms(sample)
-
-
-    def __len__(self):
-        return len(self.ids)
-
-
 
 if __name__ == "__main__":
     from deeplab3.config.defaults import get_cfg_defaults
@@ -196,8 +155,8 @@ if __name__ == "__main__":
             tmp = np.array(gt[jj]).astype(np.uint8)
             segmap = decode_segmap(tmp, dataset='coco')
             img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
-            img_tmp *= coco_val.data_std
-            img_tmp += coco_val.data_mean
+            img_tmp *= coco_val.loader.data_std
+            img_tmp += coco_val.loader.data_mean
             img_tmp *= 255.0
             img_tmp = img_tmp.astype(np.uint8)
             plt.figure()
