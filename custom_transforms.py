@@ -98,6 +98,7 @@ class RandomGaussianBlur(object):
         mask = sample['label']
 
         if isinstance(sample['image'], list):
+            img = sample['image']
             if coin_flip < 0.5:
                 img = [img.filter(ImageFilter.GaussianBlur(
                     radius=rand_radius)) for img in sample['image']]
