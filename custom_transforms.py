@@ -57,6 +57,7 @@ class RandomHorizontalFlip(object):
         mask = sample['label']
 
         if isinstance(sample['image'], list):
+            img = sample['image']
             if coin_flip < 0.5:
                 img = [img.transpose(Image.FLIP_LEFT_RIGHT) for img in sample['image']]
                 mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
