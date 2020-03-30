@@ -94,7 +94,7 @@ class SampleLoader():
         return composed_transforms(sample)
 
     def invert_normalization(self, img_tensor):
-        img = img_tensor.nympy()
+        img = img_tensor.numpy()
         img_tmp = np.transpose(img, axes=[1, 2, 0])
         img_tmp *= self.data_std
         img_tmp += self.data_mean
