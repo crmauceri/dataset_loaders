@@ -53,7 +53,9 @@ class RGBDSegmentation(Dataset):
         elif self.mode == 'RGB_HHA':
             depth_path = os.path.join(self.depth_dir, path)
 
-        return self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample['id'] = img_id
+        return sample
 
     def __len__(self):
         return len(self.ids)

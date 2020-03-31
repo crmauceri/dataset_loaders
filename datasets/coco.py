@@ -60,7 +60,9 @@ class COCOSegmentation(Dataset):
         img_path = os.path.join(self.img_dir, path)
         depth_path = os.path.join(self.depth_dir, path)
 
-        return self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample['id'] = index
+        return sample
 
     def __len__(self):
         return len(self.ids)
