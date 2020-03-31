@@ -48,7 +48,7 @@ class CityscapesSegmentation(data.Dataset):
                                 img_path.split(os.sep)[-2],
                                 os.path.basename(img_path)[:-15] + '{}.png'.format(self.cfg.DATASET.CITYSCAPES.DEPTH_DIR))
         sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
-        sample['id'] = index
+        sample['id'] = img_path
         return sample
 
     def recursive_glob(self, rootdir='.', suffix=''):
