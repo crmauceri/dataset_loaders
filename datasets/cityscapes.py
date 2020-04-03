@@ -130,15 +130,11 @@ if __name__ == '__main__':
     for ii, sample in enumerate(dataloader):
         for jj in range(sample["image"].size()[0]):
             try:
-                img = sample['image'].numpy()
+                img = sample['image']
                 gt = sample['label'].numpy()
                 tmp = np.array(gt[jj]).astype(np.uint8)
                 segmap = decode_segmap(tmp, dataset='cityscapes')
-                img_tmp = np.transpose(img[jj], axes=[1, 2, 0])
-                img_tmp *= cityscapes_train.loader.data_std
-                img_tmp += cityscapes_train.loader.data_mean
-                img_tmp *= 255.0
-                img_tmp = img_tmp.astype(np.uint8)
+                img_tmp = cityscapes_train.loader.invert_normalization(img[jj])
                 plt.figure()
                 plt.title('display')
                 plt.subplot(131)

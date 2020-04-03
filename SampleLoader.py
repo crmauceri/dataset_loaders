@@ -1,8 +1,6 @@
-import os
 import numpy as np
-import scipy.misc as m
 from PIL import Image
-from torch.utils import data
+import torch
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
 
@@ -33,25 +31,29 @@ class SampleLoader():
     def load_sample(self, img_path, depth_path, lbl_path, no_transforms=False):
         _img = Image.open(img_path).convert('RGB')
 
-        if self.mode == "RGBD":
+        if self.mode in ["RGB_HHA", "RGBD"]:
             _depth = self.loadDepth(depth_path)
-            _img.putalpha(_depth)
-        elif self.mode == "RGB_HHA":
-            _depth = self.loadDepth(depth_path)
-            _img = [_img, _depth]
+        else:
+            _depth = None
 
         _target = self.getLabels(lbl_path)
 
-        sample = {'image': _img, 'label': _target}
-        if no_transforms:
-            return sample
+        sample = {'image': _img, 'label': _target, 'depth': _depth}
 
         if self.split in ['train', 'train_extra']:
-            return self.transform_tr(sample)
+            sample = self.transform_tr(sample)
         elif self.split == 'val':
-            return self.transform_val(sample)
+            sample = self.transform_val(sample)
         elif self.split == 'test':
-            return self.transform_ts(sample)
+            sample = self.transform_ts(sample)
+
+        #Composite RGBD
+        if self.mode == "RGBD":
+            sample['image'] = torch.cat((sample['image'], sample['depth'].unsqueeze(0)), 0)
+        elif self.mode == "RGB_HHA":
+            sample['image'] = torch.cat((sample['image'], sample['depth']), 0)
+
+        return sample
 
     def loadDepth(self, depth_path):
         if self.mode == 'RGBD':
