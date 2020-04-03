@@ -27,7 +27,7 @@ class Normalize(object):
         mask = np.array(mask).astype(np.float32)
 
         depth = sample['depth']
-        if depth:
+        if not isinstance(depth, list):
             depth = np.array(depth).astype(np.float32)
             depth /= 255.0
             depth -= self.mean[3]
@@ -54,7 +54,7 @@ class ToTensor(object):
         mask = torch.from_numpy(mask).float()
 
         depth = sample['depth']
-        if depth:
+        if not isinstance(depth, list):
             depth = np.array(depth).astype(np.float32)
             if len(depth.shape) == 3:
                 depth = depth.transpose((2, 0, 1))
@@ -75,7 +75,7 @@ class RandomHorizontalFlip(object):
         if coin_flip < 0.5:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
             mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
-            if depth:
+            if not isinstance(depth, list):
                 depth = depth.transpose(Image.FLIP_LEFT_RIGHT)
 
         return {'image': img,
@@ -97,7 +97,7 @@ class RandomRotate(object):
         mask = mask.rotate(rotate_degree, Image.NEAREST)
 
         depth = sample['depth']
-        if depth:
+        if not isinstance(depth, list):
              depth = depth.rotate(rotate_degree, Image.BILINEAR)
 
         return {'image': img,
@@ -116,7 +116,7 @@ class RandomGaussianBlur(object):
         if coin_flip < 0.5:
             img = img.filter(ImageFilter.GaussianBlur(
                 radius=rand_radius))
-            if depth:
+            if not isinstance(depth, list):
                 depth = depth.filter(ImageFilter.GaussianBlur(
                 radius=rand_radius))
 
@@ -163,7 +163,7 @@ class RandomScaleCrop(object):
             img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
         img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
 
-        if depth:
+        if not isinstance(depth, list):
             depth = depth.resize((ow, oh), Image.BILINEAR)
             if short_size < self.crop_size:
                 depth = ImageOps.expand(depth, border=(0, 0, padw, padh), fill=0)
@@ -202,7 +202,7 @@ class FixScaleCrop(object):
         img = img.resize((ow, oh), Image.BILINEAR)
         img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
 
-        if depth:
+        if not isinstance(depth, list):
             depth = depth.resize((ow, oh), Image.BILINEAR)
             depth = depth.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
 
@@ -225,7 +225,7 @@ class FixedResize(object):
 
         mask = mask.resize(self.size, Image.NEAREST)
 
-        if depth:
+        if not isinstance(depth, list):
             depth = depth.resize(self.size, Image.BILINEAR)
 
         return {'image': img,
