@@ -40,5 +40,7 @@ def make_data_loader(cfg, **kwargs):
     val_loader = DataLoader(val_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
     if test_set is not None:
         test_loader = DataLoader(test_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, **kwargs)
+    else:
+        test_loader = None
 
     return train_loader, val_loader, test_loader, num_class
