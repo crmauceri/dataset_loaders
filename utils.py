@@ -95,6 +95,7 @@ def sample_distribution(dataset):
             img = np.asarray(sample['image'])
 
         #Flatten image
+        img = np.transpose(img, (1,2,0))
         img = np.reshape(img, (img.shape[0]*img.shape[1], img.shape[2]))
         if img.shape[0]>m:
             pixel_i = np.random.choice(img.shape[0], m)
@@ -104,13 +105,13 @@ def sample_distribution(dataset):
     std = np.std(samples, axis=0)
     m_max = np.max(samples, axis=0)
 
-    if dataset.mode == "RGBD":
-        import matplotlib.pyplot as plt
-        plt.hist(samples[:, -1], bins='auto')
-        plt.title("Depth histogram")
-        plt.show()
+    # if dataset.mode == "RGBD":
+    #     import matplotlib.pyplot as plt
+    #     plt.hist(samples[:, -1], bins='auto')
+    #     plt.title("Depth histogram")
+    #     plt.show()
 
-    return {'mean': mean, 'std': std, 'max': m_max}
+    return {'mean': mean, 'std': std, 'max': m_max, 'samples': samples}
 
 
 def get_cityscapes_labels():
