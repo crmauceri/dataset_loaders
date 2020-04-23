@@ -5,7 +5,8 @@ from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
 
 class SampleLoader():
-    def __init__(self, mode, split, base_size, crop_size):
+    def __init__(self, cfg, mode, split, base_size, crop_size):
+        self.cfg = cfg
         self.mode = mode
         self.split = split
         self.base_size = base_size
@@ -34,18 +35,21 @@ class SampleLoader():
         if self.mode in ["RGB_HHA", "RGBD"]:
             _depth = self.loadDepth(depth_path)
         else:
-            _depth = []
+            _depth = 'None'
 
         _target = self.getLabels(lbl_path)
 
         sample = {'image': _img, 'label': _target, 'depth': _depth}
 
-        if self.split in ['train', 'train_extra']:
-            sample = self.transform_tr(sample)
-        elif self.split == 'val':
-            sample = self.transform_val(sample)
-        elif self.split == 'test':
-            sample = self.transform_ts(sample)
+        if no_transforms:
+            sample = tr.ToTensor()(sample)
+        else:
+            if self.split in ['train', 'train_extra']:
+                sample = self.transform_tr(sample)
+            elif self.split == 'val':
+                sample = self.transform_val(sample)
+            elif self.split == 'test':
+                sample = self.transform_ts(sample)
 
         #Composite RGBD
         if self.mode == "RGBD":
@@ -57,7 +61,13 @@ class SampleLoader():
 
     def loadDepth(self, depth_path):
         if self.mode == 'RGBD':
-            _depth = Image.open(depth_path).convert('L')
+            if self.cfg.DATASET.SYNTHETIC:
+                _depth_arr = np.array(Image.open(depth_path), dtype=int)
+                assert (np.max(_depth_arr) > 255)
+                _depth = _depth_arr.astype(np.float) / 256.
+                _depth = Image.fromarray(_depth_arr)
+            else:
+                _depth = Image.open(depth_path).convert('L')
         elif self.mode == 'RGB_HHA':
             _depth = Image.open(depth_path).convert('RGB')
         return _depth

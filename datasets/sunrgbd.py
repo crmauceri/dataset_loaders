@@ -100,6 +100,19 @@ class RGBDSegmentationSampleLoader(COCOSegmentationSampleLoader):
                 mask[:, :] += (mask == 0) * (((np.sum(m, axis=2)) > 0) * c).astype(np.uint8)
         return mask
 
+    def loadDepth(self, depth_path):
+        if self.mode == 'RGBD':
+            _depth_arr = np.asarray(Image.open(depth_path), dtype='uint16')
+            # Conversion from SUNRGBD Toolbox readData/read3dPoints.m
+            _depth_arr = np.bitwise_or(np.right_shift(_depth_arr, 3), np.left_shift(_depth_arr, 16 - 3))
+            _depth_arr = np.asarray(_depth_arr, dtype='float') / 1000.0
+            _depth_arr[_depth_arr > 8] = 8
+            _depth = Image.fromarray(_depth_arr)
+            np.testing.assert_almost_equal(_depth_arr, np.array(_depth), 3)
+        elif self.mode == 'RGB_HHA':
+            _depth = Image.open(depth_path).convert('RGB')
+        return _depth
+
 
 if __name__ == "__main__":
     from deeplab3.config.defaults import get_cfg_defaults

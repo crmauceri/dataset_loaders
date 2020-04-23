@@ -76,11 +76,12 @@ def sample_distribution(dataset):
     n = min(1000, len(dataset))
     m = 100
 
-    if dataset.mode == "RGBD":
+    mode = dataset.cfg.DATASET.MODE
+    if mode == "RGBD":
         channels = 4
-    elif dataset.mode == "RGB":
+    elif mode == "RGB":
         channels = 3
-    elif dataset.mode == "RGB_HHA":
+    elif mode == "RGB_HHA":
         channels = 6
     else:
         raise ValueError('Dataset mode not implemented: {}'.format(dataset.mode))

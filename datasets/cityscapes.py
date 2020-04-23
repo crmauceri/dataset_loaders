@@ -63,7 +63,7 @@ class CityscapesSegmentation(data.Dataset):
 
 class CityscapesSampleLoader(SampleLoader):
     def __init__(self, cfg, split="train"):
-        super().__init__(cfg.DATASET.MODE, split,
+        super().__init__(cfg, cfg.DATASET.MODE, split,
                         cfg.DATASET.BASE_SIZE, cfg.DATASET.CROP_SIZE)
 
         self.void_classes = [0, 1, 2, 3, 4, 5, 6, 9, 10, 14, 15, 16, 18, 29, 30, -1]
@@ -84,9 +84,20 @@ class CityscapesSampleLoader(SampleLoader):
         return _target
 
     def loadDepth(self, depth_path):
-        if self.mode == 'RGBD':
-            _depth_arr = np.asarray(Image.open(depth_path), dtype='float')
-            _depth = Image.fromarray(_depth_arr / 25000 * 256).convert('L')
+        if self.cfg.DATASET.SYNTHETIC:
+            _depth_arr = np.array(Image.open(depth_path), dtype=int)
+            assert (np.max(_depth_arr) > 255)
+            _depth = _depth_arr.astype(np.float) / 256.
+            _depth = Image.fromarray(_depth_arr)
+        elif self.mode == 'RGBD':
+            _disparity_arr = np.array(Image.open(depth_path)).astype(np.float32)
+            # Conversion from https://github.com/mcordts/cityscapesScripts see `disparity`
+            # See https://github.com/mcordts/cityscapesScripts/issues/55#issuecomment-411486510
+            _disparity_arr[_disparity_arr > 0] = (_disparity_arr[_disparity_arr > 0] - 1.0) / 256.
+            _depth_arr = np.zeros(_disparity_arr.shape)
+            _depth_arr[_disparity_arr > 0] = 0.2 * 2262 / _disparity_arr[_disparity_arr > 0]
+            _depth = Image.fromarray(_depth_arr)
+            np.testing.assert_almost_equal(_depth_arr, np.array(_depth), 3)
         elif self.mode == 'RGB_HHA':
             _depth = Image.open(depth_path).convert('RGB')
         return _depth
