@@ -59,9 +59,12 @@ class COCOSegmentation(Dataset):
         path = img_metadata['file_name']
         img_path = os.path.join(self.img_dir, path)
         depth_path = os.path.join(self.depth_dir, path)
-
-        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
-        sample['id'] = index
+        try:
+            sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+            sample['id'] = index
+        except FileNotFoundError as e:
+            print('{}: {}'.format(e, index))
+            sample = None
         return sample
 
     def __len__(self):
