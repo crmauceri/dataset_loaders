@@ -89,7 +89,7 @@ class COCOSegmentation(Dataset):
 
 class COCOSegmentationSampleLoader(SampleLoader):
     def __init__(self, cfg, coco, split, cat_list):
-        super().__init__(cfg.DATASET.MODE, split,
+        super().__init__(cfg, cfg.DATASET.MODE, split,
                          cfg.DATASET.BASE_SIZE, cfg.DATASET.CROP_SIZE)
 
         self.coco = coco
