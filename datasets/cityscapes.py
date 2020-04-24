@@ -85,10 +85,7 @@ class CityscapesSampleLoader(SampleLoader):
 
     def loadDepth(self, depth_path):
         if self.cfg.DATASET.SYNTHETIC:
-            _depth_arr = np.array(Image.open(depth_path), dtype=int)
-            assert (np.max(_depth_arr) > 255)
-            _depth_arr = _depth_arr.astype('float32') / 256.
-            _depth = Image.fromarray(_depth_arr)
+            _depth = self.loadSyntheticDepth(depth_path)
         elif self.mode == 'RGBD':
             _disparity_arr = np.array(Image.open(depth_path)).astype(np.float32)
             # Conversion from https://github.com/mcordts/cityscapesScripts see `disparity`

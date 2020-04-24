@@ -62,14 +62,19 @@ class SampleLoader():
     def loadDepth(self, depth_path):
         if self.mode == 'RGBD':
             if self.cfg.DATASET.SYNTHETIC:
-                _depth_arr = np.array(Image.open(depth_path), dtype=int)
-                assert (np.max(_depth_arr) > 255)
-                _depth_arr = _depth_arr.astype('float32') / 256.
-                _depth = Image.fromarray(_depth_arr)
+                _depth = self.loadSyntheticDepth(depth_path)
             else:
                 _depth = Image.open(depth_path).convert('L')
         elif self.mode == 'RGB_HHA':
             _depth = Image.open(depth_path).convert('RGB')
+        return _depth
+
+    def loadSyntheticDepth(self, depth_path):
+        _depth_arr = np.array(Image.open(depth_path), dtype=int)
+        assert (np.max(_depth_arr) > 255)
+        _depth_arr = _depth_arr.astype('float32') / 256.
+        _depth = Image.fromarray(_depth_arr)
+
         return _depth
 
     def getLabels(self, lbl_path):
