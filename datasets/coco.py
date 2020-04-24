@@ -59,12 +59,8 @@ class COCOSegmentation(Dataset):
         path = img_metadata['file_name']
         img_path = os.path.join(self.img_dir, path)
         depth_path = os.path.join(self.depth_dir, path)
-        try:
-            sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
-            sample['id'] = index
-        except FileNotFoundError as e:
-            print('{}: {}'.format(e, index))
-            sample = None
+        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample['id'] = index
         return sample
 
     def __len__(self):
@@ -77,13 +73,23 @@ class COCOSegmentation(Dataset):
         new_ids = []
         for i in tbar:
             img_id = ids[i]
-            cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
-            img_metadata = self.coco.loadImgs(img_id)[0]
-            mask = self.loader.gen_seg_mask(cocotarget, img_metadata['height'],
-                                      img_metadata['width'])
-            # more than 1k pixels
-            if (mask > 0).sum() > 1000:
-                new_ids.append(img_id)
+            try:
+                img_metadata = self.coco.loadImgs(img_id)[0]
+                path = img_metadata['file_name']
+                img_path = os.path.join(self.img_dir, path)
+                depth_path = os.path.join(self.depth_dir, path)
+                sample = self.loader.load_sample(img_path, depth_path, img_id, True)
+                cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
+                img_metadata = self.coco.loadImgs(img_id)[0]
+                mask = self.loader.gen_seg_mask(cocotarget, img_metadata['height'],
+                                                img_metadata['width'])
+                # more than 1k pixels
+                if (mask > 0).sum() > 1000:
+                    new_ids.append(img_id)
+
+            except FileNotFoundError as e:
+                print("{}:{}".format(e, img_id))
+
             tbar.set_description('Doing: {}/{}, got {} qualified images'. \
                                  format(i, len(ids), len(new_ids)))
         print('Found number of qualified images: ', len(new_ids))
