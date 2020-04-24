@@ -58,7 +58,7 @@ class COCOSegmentation(Dataset):
         img_metadata = coco.loadImgs(img_id)[0]
         path = img_metadata['file_name']
         img_path = os.path.join(self.img_dir, path)
-        depth_path = os.path.join(self.depth_dir, path)
+        depth_path = os.path.join(self.depth_dir, path.replace('.jpg', '.png'))
         sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
         sample['id'] = index
         return sample
@@ -77,7 +77,7 @@ class COCOSegmentation(Dataset):
                 img_metadata = self.coco.loadImgs(img_id)[0]
                 path = img_metadata['file_name']
                 img_path = os.path.join(self.img_dir, path)
-                depth_path = os.path.join(self.depth_dir, path)
+                depth_path = os.path.join(self.depth_dir, path.replace('.jpg', '.png'))
                 sample = self.loader.load_sample(img_path, depth_path, img_id, True)
                 cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
                 img_metadata = self.coco.loadImgs(img_id)[0]
