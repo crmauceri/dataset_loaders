@@ -78,14 +78,14 @@ class COCOSegmentation(Dataset):
                 path = img_metadata['file_name']
                 img_path = os.path.join(self.img_dir, path)
                 depth_path = os.path.join(self.depth_dir, path.replace('.jpg', '.png'))
-                sample = self.loader.load_sample(img_path, depth_path, img_id, True)
-                cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
-                img_metadata = self.coco.loadImgs(img_id)[0]
-                mask = self.loader.gen_seg_mask(cocotarget, img_metadata['height'],
-                                                img_metadata['width'])
-                # more than 1k pixels
-                if (mask > 0).sum() > 1000:
-                    new_ids.append(img_id)
+                if os.path.exists(img_path) and os.path.exists(depth_path):
+                    cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
+                    img_metadata = self.coco.loadImgs(img_id)[0]
+                    mask = self.loader.gen_seg_mask(cocotarget, img_metadata['height'],
+                                                    img_metadata['width'])
+                    # more than 1k pixels
+                    if (mask > 0).sum() > 1000:
+                        new_ids.append(img_id)
 
             except FileNotFoundError as e:
                 print("{}:{}".format(e, img_id))
