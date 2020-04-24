@@ -96,6 +96,8 @@ class CityscapesSampleLoader(SampleLoader):
             _depth = Image.fromarray(_depth_arr)
             np.testing.assert_almost_equal(_depth_arr, np.array(_depth), 3)
         elif self.mode == 'RGB_HHA':
+            # Depth channel is inverse with 25600 / depth
+            # Height channel is inverse with 2560 / height
             _depth = Image.open(depth_path).convert('RGB')
         return _depth
 
