@@ -35,7 +35,7 @@ class SampleLoader():
         if self.mode in ["RGB_HHA", "RGBD"]:
             _depth = self.loadDepth(depth_path)
         else:
-            _depth = 'None'
+            _depth = []
 
         _target = self.getLabels(lbl_path)
 
