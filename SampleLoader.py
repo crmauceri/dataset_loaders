@@ -64,7 +64,7 @@ class SampleLoader():
             if self.cfg.DATASET.SYNTHETIC:
                 _depth_arr = np.array(Image.open(depth_path), dtype=int)
                 assert (np.max(_depth_arr) > 255)
-                _depth = _depth_arr.astype(np.float) / 256.
+                _depth_arr = _depth_arr.astype('float32') / 256.
                 _depth = Image.fromarray(_depth_arr)
             else:
                 _depth = Image.open(depth_path).convert('L')
