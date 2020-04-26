@@ -3,6 +3,7 @@ from PIL import Image
 import torch
 from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
+import scipy.stats
 
 class SampleLoader():
     def __init__(self, cfg, mode, split, base_size, crop_size):
@@ -18,16 +19,17 @@ class SampleLoader():
     def normalizationFactors(self):
         if self.mode == "RGBD":
             print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.213)  # TODO Cityscapes stats are [ 0.29089086,  0.32946742,  0.29078867,  0.29811586]
-            self.data_std = (0.229, 0.224, 0.225, 0.111)  # TODO [ 0.19013525,  0.19000581,  0.18482447,  0.29437588]
+            # Data mean and std empirically determined from Cityscapes
+            self.data_mean = [0.291,  0.329,  0.291,  0.126] # TODO COCO are (0.485, 0.456, 0.406, 0.008)
+            self.data_std = [0.190,  0.190,  0.185,  0.179] # TODO
         elif self.mode == "RGB":
             print('Using RGB input')
-            self.data_mean = (0.485, 0.456, 0.406)
-            self.data_std = (0.229, 0.224, 0.225)
+            self.data_mean = (0.291,  0.329,  0.291)
+            self.data_std = (0.190,  0.190,  0.185)
         elif self.mode == "RGB_HHA":
             print('Using RGB HHA input')
-            self.data_mean = (0.294, 0.332, 0.293, 0.425, 0.825, 0.648)
-            self.data_std = (0.192, 0.193, 0.188, 0.374, 0.198, 0.187)
+            self.data_mean = (0.291,  0.329,  0.291, 0.080, 0.621, 0.370)
+            self.data_std = (0.190,  0.190,  0.185, 0.061, 0.355, 0.196)
 
     def load_sample(self, img_path, depth_path, lbl_path, no_transforms=False):
         _img = Image.open(img_path).convert('RGB')
@@ -50,6 +52,9 @@ class SampleLoader():
                 sample = self.transform_val(sample)
             elif self.split == 'test':
                 sample = self.transform_ts(sample)
+
+            if self.cfg.DATASET.POWER_TRANSFORM and not isinstance(_depth, list):
+                sample['depth'] = scipy.stats.boxcox(sample['depth'], self.cfg.DATASET.PT_LAMBDA)
 
         #Composite RGBD
         if self.mode == "RGBD":
