@@ -10,7 +10,7 @@ class Normalize(object):
         mean (tuple): means for each channel.
         std (tuple): standard deviations for each channel.
     """
-    def __init__(self, mean=(0., 0., 0.), std=(1., 1., 1.)):
+    def __init__(self, mean=(0., 0., 0., 0.), std=(1., 1., 1., 1.)):
         self.mean = mean
         self.std = std
 
@@ -30,8 +30,8 @@ class Normalize(object):
         if not isinstance(depth, list):
             depth = np.array(depth).astype(np.float32)
             depth /= 255.0
-            depth -= self.mean[3]
-            depth /= self.std[3]
+            depth -= self.mean[3:]
+            depth /= self.std[3:]
 
         return {'image': img,
                 'depth': depth,

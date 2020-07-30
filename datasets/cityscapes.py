@@ -77,6 +77,21 @@ class CityscapesSampleLoader(SampleLoader):
         self.ignore_index = 255
         self.class_map = dict(zip(self.valid_classes, range(self.NUM_CLASSES)))
 
+    def normalizationFactors(self):
+        if self.mode == "RGBD":
+            print('Using RGB-D input')
+            # Data mean and std empirically determined from 1000 Cityscapes samples
+            self.data_mean = [0.291,  0.329,  0.291,  0.126]
+            self.data_std = [0.190,  0.190,  0.185,  0.179]
+        elif self.mode == "RGB":
+            print('Using RGB input')
+            self.data_mean = [0.291,  0.329,  0.291]
+            self.data_std = [0.190,  0.190,  0.185]
+        elif self.mode == "RGB_HHA":
+            print('Using RGB HHA input')
+            self.data_mean =  [0.291,  0.329,  0.291, 0.080, 0.621, 0.370]
+            self.data_std =  [0.190,  0.190,  0.185, 0.061, 0.355, 0.196]
+
     def getLabels(self, lbl_path):
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
         _tmp = self.encode_segmap(_tmp)

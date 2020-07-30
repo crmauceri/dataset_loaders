@@ -15,21 +15,10 @@ class SampleLoader():
 
         self.normalizationFactors()
 
-    #Overload this function for custom normalization factors
     def normalizationFactors(self):
-        if self.mode == "RGBD":
-            print('Using RGB-D input')
-            # Data mean and std empirically determined from Cityscapes
-            self.data_mean = [0.291,  0.329,  0.291,  0.126] # TODO COCO are (0.485, 0.456, 0.406, 0.008)
-            self.data_std = [0.190,  0.190,  0.185,  0.179] # TODO
-        elif self.mode == "RGB":
-            print('Using RGB input')
-            self.data_mean = (0.291,  0.329,  0.291)
-            self.data_std = (0.190,  0.190,  0.185)
-        elif self.mode == "RGB_HHA":
-            print('Using RGB HHA input')
-            self.data_mean = (0.291,  0.329,  0.291, 0.080, 0.621, 0.370)
-            self.data_std = (0.190,  0.190,  0.185, 0.061, 0.355, 0.196)
+        print('WARNING: Custom normalization factors not implemented for dataset')
+        self.data_mean = (0., 0., 0., 0., 0., 0.)
+        self.data_std = (1., 1., 1., 1., 1., 1.)
 
     def load_sample(self, img_path, depth_path, lbl_path, no_transforms=False):
         _img = Image.open(img_path).convert('RGB')
@@ -76,7 +65,7 @@ class SampleLoader():
 
     def loadSyntheticDepth(self, depth_path):
         _depth_arr = np.array(Image.open(depth_path), dtype=int)
-        assert (np.max(_depth_arr) > 255)
+        assert np.max(_depth_arr) > 255, depth_path
         _depth_arr = _depth_arr.astype('float32') / 256.
         _depth = Image.fromarray(_depth_arr)
 

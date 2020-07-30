@@ -72,8 +72,8 @@ def encode_segmap(mask):
     return label_mask
 
 
-def sample_distribution(dataset):
-    n = min(1000, len(dataset))
+def sample_distribution(dataset, n=1000):
+    n = min(n, len(dataset))
     m = 100
 
     mode = dataset.cfg.DATASET.MODE
@@ -105,6 +105,7 @@ def sample_distribution(dataset):
     mean = np.mean(samples, axis=0)
     std = np.std(samples, axis=0)
     m_max = np.max(samples, axis=0)
+    median = np.median(samples, axis=0)
 
     # if dataset.mode == "RGBD":
     #     import matplotlib.pyplot as plt
@@ -112,7 +113,7 @@ def sample_distribution(dataset):
     #     plt.title("Depth histogram")
     #     plt.show()
 
-    return {'mean': mean, 'std': std, 'max': m_max, 'samples': samples}
+    return {'mean': mean, 'std': std, 'max': m_max, 'median':median, 'samples': samples}
 
 
 def get_cityscapes_labels():

@@ -69,7 +69,7 @@ class RGBDSegmentation(Dataset):
             img_id = ids[i]
             cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
             img_metadata = self.coco.loadImgs(img_id)[0]
-            mask = self._gen_seg_mask(cocotarget, img_metadata['height'],
+            mask = self.loader.gen_seg_mask(cocotarget, img_metadata['height'],
                                       img_metadata['width'])
             # more than 1k pixels
             if (mask > 0).sum() > 1000:
@@ -82,6 +82,19 @@ class RGBDSegmentation(Dataset):
 
 
 class RGBDSegmentationSampleLoader(COCOSegmentationSampleLoader):
+
+    def normalizationFactors(self):
+        if self.mode == "RGBD":
+            print('Using RGB-D input')
+            # Data mean and std empirically determined from 1000 SUNRGBD samples
+            self.data_mean = [0.517, 0.511, 0.485, 0.007]
+            self.data_std = [0.269, 0.281, 0.288, 0.005]
+        elif self.mode == "RGB":
+            print('Using RGB input')
+            self.data_mean = [0.517, 0.511, 0.485]
+            self.data_std = [0.269, 0.281, 0.288]
+        elif self.mode == "RGB_HHA":
+            raise NotImplementedError("HHA normalization factors not implemented for SUNRGBD")
 
     def gen_seg_mask(self, target, h, w):
         mask = np.zeros((h, w), dtype=np.uint8)

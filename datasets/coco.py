@@ -105,6 +105,20 @@ class COCOSegmentationSampleLoader(SampleLoader):
         self.coco_mask = Mask
         self.CAT_LIST = cat_list
 
+    def normalizationFactors(self):
+        if self.mode == "RGBD":
+            print('Using RGB-D input')
+            # RGB mean and std are the standards used with ImageNet data
+            # VNL Depth mean and std empirically determined from COCO
+            self.data_mean = [0.485, 0.456, 0.406, 0.008]
+            self.data_std = [0.229, 0.224, 0.225, 0.004]
+        elif self.mode == "RGB":
+            print('Using RGB input')
+            self.data_mean = [0.485, 0.456, 0.406]
+            self.data_std = [0.229, 0.224, 0.225]
+        elif self.mode == "RGB_HHA":
+            raise NotImplementedError("HHA normalization factors not implemented for COCO")
+
     def getLabels(self, img_id):
         img_metadata = self.coco.loadImgs(img_id)[0]
         cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
