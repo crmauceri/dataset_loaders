@@ -98,7 +98,7 @@ class SampleLoader():
     def transform_ts(self, sample):
 
         composed_transforms = transforms.Compose([
-            tr.FixedResize(crop_size=self.crop_size),
+            tr.FixedResize(size=self.crop_size),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
