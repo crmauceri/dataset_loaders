@@ -76,7 +76,7 @@ class SceneNetSegmentation(data.Dataset):
         depth_path = self.dataset[index]['depth_path']
 
         try:
-            sample = self.loader(img_path, lbl_path, depth_path, no_transforms=no_transforms)
+            sample = self.loader.load_sample(img_path, lbl_path, depth_path, no_transforms=no_transforms)
 
         except IOError as e:
             # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__
