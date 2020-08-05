@@ -122,10 +122,6 @@ class ScenenetSampleLoader(SampleLoader):
         _target = Image.fromarray(_tmp)
         return _target
 
-    def loadDepth(self, depth_path):
-        _depth = np.array(Image.open(depth_path)).astype(np.float32)
-        return _depth
-
     def encode_segmap(self, mask):
         # Put all void classes to zero
         for _voidc in self.void_classes:
