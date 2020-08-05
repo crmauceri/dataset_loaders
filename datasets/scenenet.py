@@ -118,7 +118,7 @@ class ScenenetSampleLoader(SampleLoader):
 
     def getLabels(self, lbl_path):
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint16)
-        _target = Image.fromarray(_tmp)
+        _target = Image.fromarray(_tmp).convert('L')
         return _target
 
     def loadDepth(self, depth_path):
