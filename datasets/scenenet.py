@@ -116,19 +116,24 @@ class ScenenetSampleLoader(SampleLoader):
             self.data_mean =  [0.291,  0.329,  0.291, 0.080, 0.621, 0.370]
             self.data_std =  [0.190,  0.190,  0.185, 0.061, 0.355, 0.196]
 
-    # def getLabels(self, lbl_path):
-    #     _tmp = np.array(Image.open(lbl_path), dtype=np.uint16)
-    #     _tmp = self.encode_segmap(_tmp)
-    #     _target = Image.fromarray(_tmp)
-    #     return _target
-    #
-    # def encode_segmap(self, mask):
-    #     # Put all void classes to zero
-    #     for _voidc in self.void_classes:
-    #         mask[mask == _voidc] = self.ignore_index
-    #     for _validc in self.valid_classes:
-    #         mask[mask == _validc] = self.class_map[_validc]
-    #     return mask
+    def getLabels(self, lbl_path):
+        _tmp = np.array(Image.open(lbl_path), dtype=np.uint16)
+        _tmp = self.encode_segmap(_tmp)
+        _target = Image.fromarray(_tmp)
+        return _target
+
+    def loadDepth(self, depth_path):
+        _depth_arr = np.array(Image.open(depth_path)).astype(np.float32)
+        _depth = Image.fromarray(_depth_arr)
+        return _depth
+
+    def encode_segmap(self, mask):
+        # Put all void classes to zero
+        for _voidc in self.void_classes:
+            mask[mask == _voidc] = self.ignore_index
+        for _validc in self.valid_classes:
+            mask[mask == _validc] = self.class_map[_validc]
+        return mask
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults
