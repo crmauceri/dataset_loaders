@@ -118,7 +118,6 @@ class ScenenetSampleLoader(SampleLoader):
 
     def getLabels(self, lbl_path):
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint16)
-        _tmp = self.encode_segmap(_tmp)
         _target = Image.fromarray(_tmp)
         return _target
 
@@ -126,14 +125,6 @@ class ScenenetSampleLoader(SampleLoader):
         _depth_arr = np.array(Image.open(depth_path)).astype(np.uint16)
         _depth = Image.fromarray(_depth_arr)
         return _depth
-
-    def encode_segmap(self, mask):
-        # Put all void classes to zero
-        for _voidc in self.void_classes:
-            mask[mask == _voidc] = self.ignore_index
-        for _validc in self.valid_classes:
-            mask[mask == _validc] = self.class_map[_validc]
-        return mask
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults
