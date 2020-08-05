@@ -7,7 +7,7 @@ from torchvision import transforms
 from warnings import warn
 from deeplab3.dataloaders import custom_transforms as tr
 import deeplab3.dataloaders.datasets.scenenet_pb2 as sn
-from deeplab3.dataloaders.datasets.cityscapes import CityscapesSampleLoader
+from deeplab3.dataloaders.SampleLoader import SampleLoader
 
 class SceneNetSegmentation(data.Dataset):
     NUM_CLASSES = 14
@@ -62,7 +62,7 @@ class SceneNetSegmentation(data.Dataset):
                 print('Scenenet protobuf data not found at location:{0}'.format(protobuf_path))
                 print('Please ensure you have copied the pb file to the data directory')
 
-        self.loader = ScenenetSegmentationLoader(cfg, split)
+        self.loader = ScenenetSampleLoader(cfg, split)
 
         print("Found %d %s images" % (len(self.dataset), split))
 
@@ -87,20 +87,52 @@ class SceneNetSegmentation(data.Dataset):
 
         return sample
 
-
-class ScenenetSegmentationLoader(CityscapesSampleLoader):
-
+class ScenenetSampleLoader(SampleLoader):
     def __init__(self, cfg, split="train"):
-        super().__init__(cfg, split)
+        super().__init__(cfg, cfg.DATASET.MODE, split,
+                        cfg.DATASET.BASE_SIZE, cfg.DATASET.CROP_SIZE)
 
         self.void_classes = [0]
         self.valid_classes = range(1, 13)
         self.class_names = ['bed', 'books', 'ceiling', 'chair', 'floor', 'furniture', 'objects', 'picture', 'sofa',
                             'table', 'tv', 'wall', 'window']
 
+        self.NUM_CLASSES = len(self.valid_classes)
         self.ignore_index = 255
         self.class_map = dict(zip(self.valid_classes, range(self.NUM_CLASSES)))
 
+    def normalizationFactors(self):
+        if self.mode == "RGBD":
+            print('Using RGB-D input')
+            # Data mean and std empirically determined from 1000 Cityscapes samples
+            self.data_mean = [0.291,  0.329,  0.291,  0.126]
+            self.data_std = [0.190,  0.190,  0.185,  0.179]
+        elif self.mode == "RGB":
+            print('Using RGB input')
+            self.data_mean = [0.291,  0.329,  0.291]
+            self.data_std = [0.190,  0.190,  0.185]
+        elif self.mode == "RGB_HHA":
+            print('Using RGB HHA input')
+            self.data_mean =  [0.291,  0.329,  0.291, 0.080, 0.621, 0.370]
+            self.data_std =  [0.190,  0.190,  0.185, 0.061, 0.355, 0.196]
+
+    def getLabels(self, lbl_path):
+        _tmp = np.array(Image.open(lbl_path), dtype=np.uint16)
+        _tmp = self.encode_segmap(_tmp)
+        _target = Image.fromarray(_tmp)
+        return _target
+
+    def loadDepth(self, depth_path):
+        _depth = np.array(Image.open(depth_path)).astype(np.float32)
+        return _depth
+
+    def encode_segmap(self, mask):
+        # Put all void classes to zero
+        for _voidc in self.void_classes:
+            mask[mask == _voidc] = self.ignore_index
+        for _validc in self.valid_classes:
+            mask[mask == _validc] = self.class_map[_validc]
+        return mask
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults
