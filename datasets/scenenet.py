@@ -104,8 +104,8 @@ class ScenenetSampleLoader(SampleLoader):
         return _target
 
     def loadDepth(self, depth_path):
-        _depth_arr = np.array(Image.open(depth_path)).astype(np.uint16)
-        _depth = Image.fromarray(_depth_arr).convert('L')
+        _depth_arr = np.uint8(np.array(Image.open(depth_path)).astype(np.uint16) * 255. / 5000.)
+        _depth = Image.fromarray(_depth_arr, mode='L')
         return _depth
 
 if __name__ == '__main__':
