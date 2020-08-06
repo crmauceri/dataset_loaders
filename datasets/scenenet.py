@@ -89,12 +89,12 @@ class ScenenetSampleLoader(SampleLoader):
         if self.mode == "RGBD":
             print('Using RGB-D input')
             # Data mean and std empirically determined from 1000 Scenenet samples
-            self.data_mean = [0.291,  0.329,  0.291,  0.126]
-            self.data_std = [0.190,  0.190,  0.185,  0.179]
+            self.data_mean = [0.439, 0.418, 0.392, 0.985]
+            self.data_std = [0.252, 0.251, 0.256, 0.122]
         elif self.mode == "RGB":
             print('Using RGB input')
-            self.data_mean = [0.291,  0.329,  0.291]
-            self.data_std = [0.190,  0.190,  0.185]
+            self.data_mean = [0.439, 0.418, 0.392]
+            self.data_std = [0.252, 0.251, 0.256]
         elif self.mode == "RGB_HHA":
             raise NotImplementedError("ScenenetSampleLoader: HHA images not implemented")
 
