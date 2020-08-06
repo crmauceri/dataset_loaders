@@ -18,22 +18,6 @@ class SceneNetSegmentation(data.Dataset):
         self.cfg = cfg
         self.mode = cfg.DATASET.MODE
 
-        #TODO check stats
-        if self.mode=='RGBD':
-            print('Using RGB-D input')
-            self.data_mean = (0.485, 0.456, 0.406, 0.300)
-            self.data_std = (0.229, 0.224, 0.225, 0.295)
-        elif self.mode =='RGB':
-            print('Using RGB input')
-            self.data_mean = (0.485, 0.456, 0.406)
-            self.data_std = (0.229, 0.224, 0.225)
-        elif self.mode == 'RGB_HHA':
-            print('Using RGB HHA input')
-            self.data_mean = (0.485, 0.456, 0.406)
-            self.data_std = (0.229, 0.224, 0.225)
-        else:
-            raise ValueError('Dataset mode not implemented: {}'.format(self.mode))
-
         if split=="train":
             protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(1))] #TODO Use all trajectories # for i in range(1,2)]
             self.root = os.path.join(cfg.DATASET.ROOT, 'train')
@@ -43,7 +27,7 @@ class SceneNetSegmentation(data.Dataset):
         elif split=="test":
             # Reserve the 1st training partition as a test set
             protobuf_paths = [os.path.join(cfg.DATASET.ROOT, 'train_protobufs/scenenet_rgbd_train_{}.pb.filtered'.format(0))]
-            self.root = os.path.join(cfg.DATASET.ROOT, 'val')
+            self.root = os.path.join(cfg.DATASET.ROOT, 'train')
         else:
             raise ValueError("SceneNet split {} not implemented".format(split))
 
@@ -76,7 +60,7 @@ class SceneNetSegmentation(data.Dataset):
         depth_path = self.dataset[index]['depth_path']
 
         try:
-            sample = self.loader.load_sample(img_path, lbl_path, depth_path, no_transforms=no_transforms)
+            sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms=no_transforms)
 
         except IOError as e:
             # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__
@@ -104,7 +88,7 @@ class ScenenetSampleLoader(SampleLoader):
     def normalizationFactors(self):
         if self.mode == "RGBD":
             print('Using RGB-D input')
-            # Data mean and std empirically determined from 1000 Cityscapes samples
+            # Data mean and std empirically determined from 1000 Scenenet samples
             self.data_mean = [0.291,  0.329,  0.291,  0.126]
             self.data_std = [0.190,  0.190,  0.185,  0.179]
         elif self.mode == "RGB":
@@ -112,9 +96,7 @@ class ScenenetSampleLoader(SampleLoader):
             self.data_mean = [0.291,  0.329,  0.291]
             self.data_std = [0.190,  0.190,  0.185]
         elif self.mode == "RGB_HHA":
-            print('Using RGB HHA input')
-            self.data_mean =  [0.291,  0.329,  0.291, 0.080, 0.621, 0.370]
-            self.data_std =  [0.190,  0.190,  0.185, 0.061, 0.355, 0.196]
+            raise NotImplementedError("ScenenetSampleLoader: HHA images not implemented")
 
     def getLabels(self, lbl_path):
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint16)
@@ -122,7 +104,6 @@ class ScenenetSampleLoader(SampleLoader):
         return _target
 
     def loadDepth(self, depth_path):
-        print(depth_path)
         _depth_arr = np.array(Image.open(depth_path)).astype(np.uint16)
         _depth = Image.fromarray(_depth_arr).convert('L')
         return _depth
@@ -151,7 +132,7 @@ if __name__ == '__main__':
     cfg.freeze()
     print(cfg)
 
-    scenenet_train = SceneNetSegmentation(cfg, split='train')
+    scenenet_train = SceneNetSegmentation(cfg, split='test')
 
     dataloader = DataLoader(scenenet_train, batch_size=2, shuffle=True, num_workers=2)
 
