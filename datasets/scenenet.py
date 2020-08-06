@@ -89,7 +89,7 @@ class ScenenetSampleLoader(SampleLoader):
         if self.mode == "RGBD":
             print('Using RGB-D input')
             # Data mean and std empirically determined from 1000 Scenenet samples
-            self.data_mean = [0.439, 0.418, 0.392, 0.985]
+            self.data_mean = [0.439, 0.418, 0.392, 0.495]
             self.data_std = [0.252, 0.251, 0.256, 0.122]
         elif self.mode == "RGB":
             print('Using RGB input')
