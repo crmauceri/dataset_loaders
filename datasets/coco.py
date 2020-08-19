@@ -128,8 +128,8 @@ class COCOSegmentationSampleLoader(SampleLoader):
 
     def loadSyntheticDepth(self, depth_path):
         _depth_arr = np.array(Image.open(depth_path), dtype=int)
-        if np.max(_depth_arr) > 2000:
-            print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
+        # if np.max(_depth_arr) > 2000:
+        #     print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
         _depth_arr = (_depth_arr.astype('float32') / 2000.) * 256
         np.clip(_depth_arr, 0, 255, out=_depth_arr)
         _depth_arr = _depth_arr.astype(np.uint8)

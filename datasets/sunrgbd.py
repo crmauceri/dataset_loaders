@@ -87,8 +87,8 @@ class RGBDSegmentationSampleLoader(COCOSegmentationSampleLoader):
         if self.mode == "RGBD":
             print('Using RGB-D input')
             # Data mean and std empirically determined from 1000 SUNRGBD samples
-            self.data_mean = [0.517, 0.511, 0.485, 0.007]
-            self.data_std = [0.269, 0.281, 0.288, 0.005]
+            self.data_mean = [0.517, 0.511, 0.485, 0.206]
+            self.data_std = [0.269, 0.281, 0.288, 0.159]
         elif self.mode == "RGB":
             print('Using RGB input')
             self.data_mean = [0.517, 0.511, 0.485]
@@ -120,12 +120,12 @@ class RGBDSegmentationSampleLoader(COCOSegmentationSampleLoader):
             _depth_arr = np.bitwise_or(np.right_shift(_depth_arr, 3), np.left_shift(_depth_arr, 16 - 3))
             _depth_arr = np.asarray(_depth_arr, dtype='float') / 1000.0
             _depth_arr[_depth_arr > 8] = 8
-            _depth = Image.fromarray(_depth_arr)
-            np.testing.assert_almost_equal(_depth_arr, np.array(_depth), 3)
+            _depth_arr = _depth_arr / 8. * 255.
+            _depth_arr = _depth_arr.astype(np.uint8)
+            _depth = Image.fromarray(_depth_arr).convert('L')
         elif self.mode == 'RGB_HHA':
             _depth = Image.open(depth_path).convert('RGB')
         return _depth
-
 
 if __name__ == "__main__":
     from deeplab3.config.defaults import get_cfg_defaults
