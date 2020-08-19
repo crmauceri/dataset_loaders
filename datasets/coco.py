@@ -110,8 +110,8 @@ class COCOSegmentationSampleLoader(SampleLoader):
             print('Using RGB-D input')
             # RGB mean and std are the standards used with ImageNet data
             # VNL Depth mean and std empirically determined from COCO
-            self.data_mean = [0.485, 0.456, 0.406, 0.008]
-            self.data_std = [0.229, 0.224, 0.225, 0.004]
+            self.data_mean = [0.485, 0.456, 0.406, .248]
+            self.data_std = [0.229, 0.224, 0.225, .122]
         elif self.mode == "RGB":
             print('Using RGB input')
             self.data_mean = [0.485, 0.456, 0.406]
@@ -125,6 +125,17 @@ class COCOSegmentationSampleLoader(SampleLoader):
         _target = Image.fromarray(self.gen_seg_mask(
             cocotarget, img_metadata['height'], img_metadata['width']))
         return _target
+
+    def loadSyntheticDepth(self, depth_path):
+        _depth_arr = np.array(Image.open(depth_path), dtype=int)
+        if np.max(_depth_arr) > 2000:
+            print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
+        _depth_arr = (_depth_arr.astype('float32') / 2000.) * 256
+        np.clip(_depth_arr, 0, 255, out=_depth_arr)
+        _depth_arr = _depth_arr.astype(np.uint8)
+        _depth = Image.fromarray(_depth_arr).convert('L')
+
+        return _depth
 
     def gen_seg_mask(self, target, h, w):
         mask = np.zeros((h, w), dtype=np.uint8)

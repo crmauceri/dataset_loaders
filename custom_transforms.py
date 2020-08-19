@@ -1,6 +1,8 @@
 import torch
 import random
 import numpy as np
+import torchvision
+import skimage
 
 from PIL import Image, ImageOps, ImageFilter
 
@@ -227,6 +229,38 @@ class FixedResize(object):
 
         if not isinstance(depth, list):
             depth = depth.resize(self.size, Image.BILINEAR)
+
+        return {'image': img,
+                'depth': depth,
+                'label': mask}
+
+# Based on method from
+#  Structure-Revealing Low-Light Image EnhancementVia Robust Retinex Model.
+#          Li et al. Transactions on Image Processing, 2018.
+# "We synthesize low-light images by  first  applying Gamma correction(withγ=2.2)  (...)
+#  and  then  adding Poisson noise and white Gaussian noise to Gamma corrected images.
+#  In our work, we use the built-in function of MATLAB imnoise to generate Poisson noise.
+#  For Gaussian noise, we use σ=5  to  simulate  the  noise  level  in  most  natural  low-light images."
+class RandomDarken(object):
+    def __init__(self, darken):
+        self.darken = darken  # size: (h, w)
+
+    def __call__(self, sample):
+        mask = sample['label']
+        depth = sample['depth']
+        img = sample['image']
+
+        if self.darken:
+            # Darken Image
+            gamma = 1.0 + random.random() * 1.2
+            gain = 1 - random.random() / 2.0
+            img = torchvision.transforms.functional.adjust_gamma(img, gamma, gain)
+
+            # Add noise
+            img_arr = np.array(img).astype(np.float32) / 255.
+            img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=False)
+            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', mean= 5./255., clip=True)
+            img = Image.fromarray(np.uint8(img_arr * 255.))
 
         return {'image': img,
                 'depth': depth,

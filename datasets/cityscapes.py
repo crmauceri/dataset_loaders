@@ -116,6 +116,17 @@ class CityscapesSampleLoader(SampleLoader):
             _depth = Image.open(depth_path).convert('RGB')
         return _depth
 
+    def loadSyntheticDepth(self, depth_path):
+        _depth_arr = np.array(Image.open(depth_path), dtype=int)
+        if np.max(_depth_arr) > 10000:
+            print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
+        _depth_arr = (_depth_arr.astype('float32') / 10000.) * 256
+        np.clip(_depth_arr, 0, 255, out=_depth_arr)
+        _depth_arr = _depth_arr.astype(np.uint8)
+        _depth = Image.fromarray(_depth_arr).convert('L')
+
+        return _depth
+
     def encode_segmap(self, mask):
         # Put all void classes to zero
         for _voidc in self.void_classes:

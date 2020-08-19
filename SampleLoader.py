@@ -12,6 +12,7 @@ class SampleLoader():
         self.split = split
         self.base_size = base_size
         self.crop_size = crop_size
+        self.darken = cfg.DATASET.DARKEN
 
         self.normalizationFactors()
 
@@ -30,7 +31,7 @@ class SampleLoader():
 
         _target = self.getLabels(lbl_path)
 
-        sample = {'image': _img, 'label': _target, 'depth': _depth}
+        sample = {'image': _img, 'label': _target, 'depth': _depth, 'id': img_path}
 
         if no_transforms:
             sample = tr.ToTensor()(sample)
@@ -64,11 +65,13 @@ class SampleLoader():
         return _depth
 
     def loadSyntheticDepth(self, depth_path):
-        _depth_arr = np.array(Image.open(depth_path), dtype=int)
-        assert np.max(_depth_arr) > 255, depth_path
-        _depth_arr = _depth_arr.astype('float32') / 256.
-        _depth = Image.fromarray(_depth_arr)
+        # _depth_arr = np.array(Image.open(depth_path), dtype=int)
+        # if np.max(_depth_arr) > 255:
+        #     print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
+        # _depth_arr = _depth_arr.astype('float32') / 256.
+        #_depth = Image.fromarray(_depth_arr)
 
+        _depth = Image.open(depth_path)
         return _depth
 
     def getLabels(self, lbl_path):
@@ -80,6 +83,7 @@ class SampleLoader():
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
             tr.RandomScaleCrop(base_size=self.base_size, crop_size=self.crop_size, fill=255),
+            tr.RandomDarken(self.darken),
             #tr.RandomGaussianBlur(), #TODO Not working for depth channel
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
@@ -90,6 +94,7 @@ class SampleLoader():
 
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.crop_size),
+            tr.RandomDarken(self.darken),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
@@ -99,6 +104,7 @@ class SampleLoader():
 
         composed_transforms = transforms.Compose([
             tr.FixedResize(size=self.crop_size),
+            tr.RandomDarken(self.darken),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
