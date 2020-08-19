@@ -100,7 +100,13 @@ class CityscapesSampleLoader(SampleLoader):
 
     def loadDepth(self, depth_path):
         if self.cfg.DATASET.SYNTHETIC:
-            _depth = self.loadSyntheticDepth(depth_path)
+            _depth_arr = np.array(Image.open(depth_path), dtype=int)
+            # if np.max(_depth_arr) > 10000:
+            #     print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
+            _depth_arr = (_depth_arr.astype('float32') / 10000.) * 256
+            np.clip(_depth_arr, 0, 255, out=_depth_arr)
+            _depth_arr = _depth_arr.astype(np.uint8)
+            _depth = Image.fromarray(_depth_arr).convert('L')
         elif self.mode == 'RGBD':
             _disparity_arr = np.array(Image.open(depth_path)).astype(np.float32)
             # Conversion from https://github.com/mcordts/cityscapesScripts see `disparity`
@@ -108,23 +114,15 @@ class CityscapesSampleLoader(SampleLoader):
             _disparity_arr[_disparity_arr > 0] = (_disparity_arr[_disparity_arr > 0] - 1.0) / 256.
             _depth_arr = np.zeros(_disparity_arr.shape)
             _depth_arr[_disparity_arr > 0] = 0.2 * 2262 / _disparity_arr[_disparity_arr > 0]
+            # _depth_arr[_depth_arr > 60] = 60
+            # _depth_arr = _depth_arr / 60. * 255.
+            # _depth_arr = _depth_arr.astype(np.uint8)
+            # _depth = Image.fromarray(_depth_arr).convert('L')
             _depth = Image.fromarray(_depth_arr)
-            np.testing.assert_almost_equal(_depth_arr, np.array(_depth), 3)
         elif self.mode == 'RGB_HHA':
             # Depth channel is inverse with 25600 / depth
             # Height channel is inverse with 2560 / height
             _depth = Image.open(depth_path).convert('RGB')
-        return _depth
-
-    def loadSyntheticDepth(self, depth_path):
-        _depth_arr = np.array(Image.open(depth_path), dtype=int)
-        if np.max(_depth_arr) > 10000:
-            print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
-        _depth_arr = (_depth_arr.astype('float32') / 10000.) * 256
-        np.clip(_depth_arr, 0, 255, out=_depth_arr)
-        _depth_arr = _depth_arr.astype(np.uint8)
-        _depth = Image.fromarray(_depth_arr).convert('L')
-
         return _depth
 
     def encode_segmap(self, mask):
