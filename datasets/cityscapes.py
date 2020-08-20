@@ -43,9 +43,10 @@ class CityscapesSegmentation(data.Dataset):
     def __getitem__(self, index, no_transforms=False):
 
         img_path = self.files[self.split][index].rstrip()
+        gt_mode = 'gtFine' if self.split == 'val' else self.cfg.DATASET.CITYSCAPES.GT_MODE
         lbl_path = os.path.join(self.annotations_base,
                                 img_path.split(os.sep)[-2],
-                                os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(self.cfg.DATASET.CITYSCAPES.GT_MODE))
+                                os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(gt_mode))
 
         depth_path = os.path.join(self.depth_base,
                                 img_path.split(os.sep)[-2],
