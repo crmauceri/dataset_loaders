@@ -67,7 +67,7 @@ class SceneNetSegmentation(data.Dataset):
             warn(e, category=RuntimeWarning)
             _img = Image.fromarray(np.zeros(()) if self.use_depth else np.zeros(()))
             _target = np.zeros((), dtype=np.uint8)
-            sample = {'image': _img, 'label': _target}
+            sample = {'image': _img, 'label': _target, 'id':img_path}
 
         return sample
 

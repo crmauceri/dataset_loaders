@@ -38,6 +38,10 @@ class COCOSegmentation(Dataset):
             # There is only partial overlap between these two category lists. This map indexes sunrgbd:coco
             self.CAT_MAP = {0:0, 4:65, 5:62, 6:63, 7:67, 23:84, 24:82, 25:72, 31:1, 33:70, 34:81, 37:31}
             self.CAT_LIST = list(self.CAT_MAP.values())
+        elif cfg.DATASET.COCO.CATEGORIES == 'cityscapes:':
+            # There is only partial overlap between these two category lists. This map indexes cityscapes:coco
+            self.CAT_MAP = {19:10, 20:13, 24:0, 26:3, 27:8, 28:6, 31:7, 32:4, 33:2}
+            self.CAT_LIST = list(self.CAT_MAP.values())
         else:
             raise ValueError('Category mapping to {} not implemented for COCOSegmentation'.format(cfg.DATASET.COCO.CATEGORIES))
         self.NUM_CLASSES = len(self.CAT_LIST)

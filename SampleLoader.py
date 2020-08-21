@@ -31,7 +31,7 @@ class SampleLoader():
 
         _target = self.getLabels(lbl_path)
 
-        sample = {'image': _img, 'label': _target, 'depth': _depth, 'id': img_path}
+        sample = {'image': _img, 'label': _target, 'depth': _depth}
 
         if no_transforms:
             sample = tr.ToTensor()(sample)
@@ -52,6 +52,7 @@ class SampleLoader():
         elif self.mode == "RGB_HHA":
             sample['image'] = torch.cat((sample['image'], sample['depth']), 0)
 
+        sample['id'] = img_path
         return sample
 
     def loadDepth(self, depth_path):
