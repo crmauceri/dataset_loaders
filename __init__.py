@@ -15,7 +15,7 @@ def make_data_loader(cfg, **kwargs):
     elif cfg.DATASET.NAME == 'cityscapes':
         train_set = cityscapes.CityscapesSegmentation(cfg, split=cfg.DATASET.CITYSCAPES.TRAIN_SET)
         val_set = cityscapes.CityscapesSegmentation(cfg, split='val')
-        test_set = cityscapes.CityscapesSegmentation(cfg, split='train')
+        test_set = cityscapes.CityscapesSegmentation(cfg, split='test')
 
     elif cfg.DATASET.NAME == 'scenenet':
         train_set = scenenet.SceneNetSegmentation(cfg, split='train')

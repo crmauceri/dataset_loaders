@@ -22,7 +22,7 @@ class CityscapesSegmentation(data.Dataset):
         self.files = {}
 
         self.images_base = os.path.join(self.root, 'leftImg8bit', self.split)
-        if split == "val":
+        if split == "val" or split == "test":
             self.annotations_base = os.path.join(self.root, 'gtFine', self.split)
         else:
             self.annotations_base = os.path.join(self.root, cfg.DATASET.CITYSCAPES.GT_MODE, self.split)
