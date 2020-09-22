@@ -45,9 +45,9 @@ class COCOSegmentation(Dataset):
         else:
             raise ValueError('Category mapping to {} not implemented for COCOSegmentation'.format(cfg.DATASET.COCO.CATEGORIES))
         self.NUM_CLASSES = len(self.CAT_LIST)
-        self.class_names = ['unknown'] + [self.coco.cats[i]['name'] for i in self.CAT_LIST[1:]]
+        class_names = ['unknown'] + [self.coco.cats[i]['name'] for i in self.CAT_LIST[1:]]
 
-        self.loader = COCOSegmentationSampleLoader(cfg, self.coco, split, self.CAT_LIST)
+        self.loader = COCOSegmentationSampleLoader(cfg, self.coco, split, self.CAT_LIST, class_names)
 
         if os.path.exists(ids_file):
             self.ids = torch.load(ids_file)
@@ -101,13 +101,14 @@ class COCOSegmentation(Dataset):
         return new_ids
 
 class COCOSegmentationSampleLoader(SampleLoader):
-    def __init__(self, cfg, coco, split, cat_list):
+    def __init__(self, cfg, coco, split, cat_list, class_names):
         super().__init__(cfg, cfg.DATASET.MODE, split,
                          cfg.DATASET.BASE_SIZE, cfg.DATASET.CROP_SIZE)
 
         self.coco = coco
         self.coco_mask = Mask
         self.CAT_LIST = cat_list
+        self.class_names = class_names
 
     def normalizationFactors(self):
         if self.mode == "RGBD":
