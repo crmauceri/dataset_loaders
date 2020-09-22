@@ -29,9 +29,9 @@ class RGBDSegmentation(Dataset):
         self.coco = COCO(ann_file)
         self.mode = cfg.DATASET.MODE
 
-        self.class_names = [self.coco.cats[i]['name'] for i in self.CAT_LIST]
+        class_names = [self.coco.cats[i]['name'] for i in self.CAT_LIST]
 
-        self.loader = RGBDSegmentationSampleLoader(cfg, self.coco, split, self.CAT_LIST)
+        self.loader = RGBDSegmentationSampleLoader(cfg, self.coco, split, self.CAT_LIST, class_names)
 
         if os.path.exists(ids_file):
             self.ids = torch.load(ids_file)
