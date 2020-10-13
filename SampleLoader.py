@@ -12,7 +12,7 @@ class SampleLoader():
         self.split = split
         self.base_size = base_size
         self.crop_size = crop_size
-        self.darken = cfg.DATASET.DARKEN
+        self.darken = cfg.DATASET.DARKEN.DARKEN
 
         self.normalizationFactors()
 
@@ -95,7 +95,7 @@ class SampleLoader():
 
         composed_transforms = transforms.Compose([
             tr.FixScaleCrop(crop_size=self.crop_size),
-            tr.RandomDarken(self.darken),
+            tr.Darken(self.cfg),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
@@ -105,7 +105,7 @@ class SampleLoader():
 
         composed_transforms = transforms.Compose([
             tr.FixedResize(size=self.crop_size),
-            tr.RandomDarken(self.darken),
+            tr.Darken(self.cfg),
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
 
