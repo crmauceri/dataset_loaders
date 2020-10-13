@@ -67,6 +67,16 @@ class COCOSegmentation(Dataset):
         sample['id'] = index
         return sample
 
+    def coco_paths(self, index):
+        coco = self.coco
+        img_id = self.ids[index]
+        img_metadata = coco.loadImgs(img_id)[0]
+        path = img_metadata['file_name']
+        img_path = os.path.join(self.img_dir, path)
+        depth_path = os.path.join(self.depth_dir, path.replace('.jpg', '.png'))
+
+        return img_path, depth_path, img_id
+
     def __len__(self):
         return len(self.ids)
 

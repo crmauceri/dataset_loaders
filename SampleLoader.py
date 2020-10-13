@@ -21,7 +21,7 @@ class SampleLoader():
         self.data_mean = (0., 0., 0., 0., 0., 0.)
         self.data_std = (1., 1., 1., 1., 1., 1.)
 
-    def load_sample(self, img_path, depth_path, lbl_path, no_transforms=False):
+    def get_sample(self, img_path, depth_path, lbl_path):
         _img = Image.open(img_path).convert('RGB')
 
         if self.mode in ["RGB_HHA", "RGBD"]:
@@ -32,6 +32,10 @@ class SampleLoader():
         _target = self.getLabels(lbl_path)
 
         sample = {'image': _img, 'label': _target, 'depth': _depth}
+        return sample
+
+    def load_sample(self, img_path, depth_path, lbl_path, no_transforms=False):
+        sample = self.get_sample(img_path, depth_path, lbl_path)
 
         if no_transforms:
             sample = tr.ToTensor()(sample)

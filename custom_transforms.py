@@ -268,7 +268,7 @@ class RandomDarken(object):
 
 class Darken(object):
     def __init__(self, cfg):
-        #, gamma=2.0, gain=1.5, gaussian_m = 5./255.
+        #, gamma=2.0, gain=0.5, gaussian_m = 5./255.
         self.darken = cfg.DATASET.DARKEN.DARKEN  # size: (h, w)
         self.gamma = cfg.DATASET.DARKEN.GAMMA
         self.gain = cfg.DATASET.DARKEN.GAIN
@@ -283,11 +283,41 @@ class Darken(object):
             # Darken Image
             img = torchvision.transforms.functional.adjust_gamma(img, self.gamma, self.gain)
 
-            # Add noise
             img_arr = np.array(img).astype(np.float32) / 255.
+
+            # Add noise
+            # Shot noise, proportional to number of photons measured
             img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=False)
+            # Temperature noise, constant for sensor at temperature
             img_arr = skimage.util.random_noise(img_arr, mode='gaussian', mean=self.gaussian_m, clip=True)
+
             img = Image.fromarray(np.uint8(img_arr * 255.))
+
+        return {'image': img,
+                'depth': depth,
+                'label': mask}
+
+## Reverses gamma correction and gain to show the effect of adding noise to the image. Noise is not-reversed
+class UnDarken(object):
+    def __init__(self, cfg):
+        #, gamma=2.0, gain=0.5, gaussian_m = 5./255.
+        self.darken = cfg.DATASET.DARKEN.DARKEN  # size: (h, w)
+        self.gamma = 1.0 / cfg.DATASET.DARKEN.GAMMA # To reverse gamma correction, take the gamma root
+
+        if cfg.DATASET.DARKEN.GAIN == 0:
+            self.gain = 0.0 #No way to reverse
+        else:
+            self.gain = 1.0 / cfg.DATASET.DARKEN.GAIN # To reverse gain, multiply by the inverse
+
+    def __call__(self, sample):
+        mask = sample['label']
+        depth = sample['depth']
+        img = sample['image']
+
+        if self.darken:
+            # Darken Image
+            img = torchvision.transforms.functional.adjust_gamma(img, self.gamma, self.gain)
+            img = Image.fromarray(np.uint8(img))
 
         return {'image': img,
                 'depth': depth,
