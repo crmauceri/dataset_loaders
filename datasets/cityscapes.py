@@ -56,7 +56,7 @@ class CityscapesSegmentation(data.Dataset):
 
         gt_mode = 'gtFine' if self.split == 'val' else self.cfg.DATASET.CITYSCAPES.GT_MODE
         if scramble_labels:
-            r_index = random.randint(0, len(self.files[self.split]))
+            r_index = random.randrange(0, len(self.files[self.split]))
             base_path = self.files[self.split][r_index].rstrip()
         else:
             base_path = img_path

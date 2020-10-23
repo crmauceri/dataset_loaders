@@ -73,7 +73,7 @@ class SceneNetSegmentation(data.Dataset):
         depth_path = self.dataset[index]['depth_path']
 
         if scramble_labels:
-            r_index = random.randint(0, len(self.dataset[r_index]))
+            r_index = random.randrange(0, len(self.dataset[r_index]))
             lbl_path = self.dataset[r_index]['lbl_path']
         else:
             lbl_path = self.dataset[index]['lbl_path']
