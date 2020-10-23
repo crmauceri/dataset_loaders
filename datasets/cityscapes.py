@@ -42,7 +42,7 @@ class CityscapesSegmentation(data.Dataset):
         return len(self.files[self.split])
 
     def __getitem__(self, index, no_transforms=False):
-        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.DATASET.SCRAMBLE_LABELS)
+        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
         sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
         sample['id'] = img_path
         return sample

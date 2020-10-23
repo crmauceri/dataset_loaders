@@ -54,7 +54,7 @@ class SceneNetSegmentation(data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index, no_transforms=False):
-        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.DATASET.SCRAMBLE_LABELS)
+        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
 
         try:
             sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms=no_transforms)
@@ -73,7 +73,7 @@ class SceneNetSegmentation(data.Dataset):
         depth_path = self.dataset[index]['depth_path']
 
         if scramble_labels:
-            r_index = random.randrange(0, len(self.dataset[r_index]))
+            r_index = random.randrange(0, len(self.dataset))
             lbl_path = self.dataset[r_index]['lbl_path']
         else:
             lbl_path = self.dataset[index]['lbl_path']
