@@ -1,39 +1,45 @@
 from deeplab3.dataloaders.datasets import cityscapes, coco, combine_dbs, pascal, sbd, sunrgbd, scenenet
 from torch.utils.data import DataLoader
 
-def make_data_loader(cfg, **kwargs):
-
+def make_dataset(cfg, split):
     if cfg.DATASET.NAME == 'pascal':
         if cfg.DATASET.MODE != "RGB":
             raise ValueError('RGBD DataLoader not implemented')
-        train_set = pascal.VOCSegmentation(cfg, split='train')
-        val_set = pascal.VOCSegmentation(cfg, split='val')
         if cfg.DATASET.USE_SBD:
             sbd_train = sbd.SBDSegmentation(cfg, split=['train', 'val'])
-            train_set = combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
+            return combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
+
+        return pascal.VOCSegmentation(cfg, split=split)
 
     elif cfg.DATASET.NAME == 'cityscapes':
-        train_set = cityscapes.CityscapesSegmentation(cfg, split=cfg.DATASET.CITYSCAPES.TRAIN_SET)
-        val_set = cityscapes.CityscapesSegmentation(cfg, split='val')
-        test_set = cityscapes.CityscapesSegmentation(cfg, split='test')
+        if split == "train":
+            return cityscapes.CityscapesSegmentation(cfg, split=cfg.DATASET.CITYSCAPES.TRAIN_SET)
+        else:
+            return cityscapes.CityscapesSegmentation(cfg, split=split)
 
     elif cfg.DATASET.NAME == 'scenenet':
-        train_set = scenenet.SceneNetSegmentation(cfg, split='train')
-        val_set = scenenet.SceneNetSegmentation(cfg, split='val')
-        test_set = scenenet.SceneNetSegmentation(cfg, split='test')
+        return scenenet.SceneNetSegmentation(cfg, split=split)
 
     elif cfg.DATASET.NAME == 'coco':
-        train_set = coco.COCOSegmentation(cfg, split='train')
-        val_set = coco.COCOSegmentation(cfg, split='val')
-        test_set = None
+        if split == "test":
+            return None
+        else:
+            return coco.COCOSegmentation(cfg, split=split)
 
     elif cfg.DATASET.NAME in ['sunrgbd', 'matterport3d']:
-        train_set = sunrgbd.RGBDSegmentation(cfg, split='train')
-        val_set = sunrgbd.RGBDSegmentation(cfg, split='val')
-        test_set = None
+        if split == "test":
+            return None
+        else:
+            return sunrgbd.RGBDSegmentation(cfg, split=split)
 
     else:
         raise NotImplementedError
+
+
+def make_data_loader(cfg, **kwargs):
+    train_set = make_dataset(cfg, 'train')
+    val_set = make_dataset(cfg, 'val')
+    test_set = make_dataset(cfg, 'test')
 
     num_class = cfg.DATASET.N_CLASSES
     train_loader = DataLoader(train_set, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, **kwargs)
