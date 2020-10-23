@@ -41,6 +41,12 @@ class RGBDSegmentation(Dataset):
         self.cfg = cfg
 
     def __getitem__(self, index, no_transforms=False):
+        img_path, depth_path, img_id = self.get_path(index)
+        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample['id'] = img_id
+        return sample
+
+    def get_path(self, index):
         coco = self.coco
         img_id = self.ids[index]
         img_metadata = coco.loadImgs(img_id)[0]
@@ -52,10 +58,7 @@ class RGBDSegmentation(Dataset):
 
         elif self.mode == 'RGB_HHA':
             depth_path = os.path.join(self.depth_dir, path)
-
-        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
-        sample['id'] = img_id
-        return sample
+        return img_path, depth_path, img_id
 
     def __len__(self):
         return len(self.ids)

@@ -57,17 +57,12 @@ class COCOSegmentation(Dataset):
         self.cfg = cfg
 
     def __getitem__(self, index, no_transforms=False):
-        coco = self.coco
-        img_id = self.ids[index]
-        img_metadata = coco.loadImgs(img_id)[0]
-        path = img_metadata['file_name']
-        img_path = os.path.join(self.img_dir, path)
-        depth_path = os.path.join(self.depth_dir, path.replace('.jpg', '.png'))
+        img_path, depth_path, img_id = self.get_path(index)
         sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
         sample['id'] = index
         return sample
 
-    def coco_paths(self, index):
+    def get_path(self, index):
         coco = self.coco
         img_id = self.ids[index]
         img_metadata = coco.loadImgs(img_id)[0]

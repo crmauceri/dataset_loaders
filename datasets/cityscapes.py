@@ -41,7 +41,12 @@ class CityscapesSegmentation(data.Dataset):
         return len(self.files[self.split])
 
     def __getitem__(self, index, no_transforms=False):
+        img_path, depth_path, lbl_path = self.get_path(index)
+        sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
+        sample['id'] = img_path
+        return sample
 
+    def get_path(self, index):
         img_path = self.files[self.split][index].rstrip()
         gt_mode = 'gtFine' if self.split == 'val' else self.cfg.DATASET.CITYSCAPES.GT_MODE
         lbl_path = os.path.join(self.annotations_base,
@@ -49,11 +54,10 @@ class CityscapesSegmentation(data.Dataset):
                                 os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(gt_mode))
 
         depth_path = os.path.join(self.depth_base,
-                                img_path.split(os.sep)[-2],
-                                os.path.basename(img_path)[:-15] + '{}.png'.format(self.cfg.DATASET.CITYSCAPES.DEPTH_DIR))
-        sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
-        sample['id'] = img_path
-        return sample
+                                  img_path.split(os.sep)[-2],
+                                  os.path.basename(img_path)[:-15] + '{}.png'.format(
+                                      self.cfg.DATASET.CITYSCAPES.DEPTH_DIR))
+        return img_path, depth_path, lbl_path
 
     def recursive_glob(self, rootdir='.', suffix=''):
         """Performs recursive glob with given suffix and rootdir

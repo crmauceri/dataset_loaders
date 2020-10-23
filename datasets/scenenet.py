@@ -54,10 +54,7 @@ class SceneNetSegmentation(data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index, no_transforms=False):
-
-        img_path = self.dataset[index]['img_path']
-        lbl_path = self.dataset[index]['lbl_path']
-        depth_path = self.dataset[index]['depth_path']
+        img_path, depth_path, lbl_path = self.get_path(index)
 
         try:
             sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms=no_transforms)
@@ -70,6 +67,12 @@ class SceneNetSegmentation(data.Dataset):
             sample = {'image': _img, 'label': _target, 'id':img_path}
 
         return sample
+
+    def get_path(self, index):
+        img_path = self.dataset[index]['img_path']
+        lbl_path = self.dataset[index]['lbl_path']
+        depth_path = self.dataset[index]['depth_path']
+        return img_path, depth_path, lbl_path
 
 class ScenenetSampleLoader(SampleLoader):
     def __init__(self, cfg, split="train"):
