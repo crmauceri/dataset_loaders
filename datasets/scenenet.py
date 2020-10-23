@@ -1,4 +1,4 @@
-import os
+import os, random
 import numpy as np
 import scipy.misc as m
 from PIL import Image
@@ -54,7 +54,7 @@ class SceneNetSegmentation(data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index, no_transforms=False):
-        img_path, depth_path, lbl_path = self.get_path(index)
+        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.DATASET.SCRAMBLE_LABELS)
 
         try:
             sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms=no_transforms)
@@ -68,10 +68,16 @@ class SceneNetSegmentation(data.Dataset):
 
         return sample
 
-    def get_path(self, index):
+    def get_path(self, index, scramble_labels=False):
         img_path = self.dataset[index]['img_path']
-        lbl_path = self.dataset[index]['lbl_path']
         depth_path = self.dataset[index]['depth_path']
+
+        if scramble_labels:
+            r_index = random.randint(0, len(self.dataset[r_index]))
+            lbl_path = self.dataset[r_index]['lbl_path']
+        else:
+            lbl_path = self.dataset[index]['lbl_path']
+
         return img_path, depth_path, lbl_path
 
 class ScenenetSampleLoader(SampleLoader):

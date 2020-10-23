@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import scipy.misc as m
 from PIL import Image
@@ -41,22 +42,28 @@ class CityscapesSegmentation(data.Dataset):
         return len(self.files[self.split])
 
     def __getitem__(self, index, no_transforms=False):
-        img_path, depth_path, lbl_path = self.get_path(index)
+        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.DATASET.SCRAMBLE_LABELS)
         sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
         sample['id'] = img_path
         return sample
 
-    def get_path(self, index):
+    def get_path(self, index, scramble_labels=False):
         img_path = self.files[self.split][index].rstrip()
-        gt_mode = 'gtFine' if self.split == 'val' else self.cfg.DATASET.CITYSCAPES.GT_MODE
-        lbl_path = os.path.join(self.annotations_base,
-                                img_path.split(os.sep)[-2],
-                                os.path.basename(img_path)[:-15] + '{}_labelIds.png'.format(gt_mode))
-
         depth_path = os.path.join(self.depth_base,
                                   img_path.split(os.sep)[-2],
                                   os.path.basename(img_path)[:-15] + '{}.png'.format(
                                       self.cfg.DATASET.CITYSCAPES.DEPTH_DIR))
+
+        gt_mode = 'gtFine' if self.split == 'val' else self.cfg.DATASET.CITYSCAPES.GT_MODE
+        if scramble_labels:
+            r_index = random.randint(0, len(self.files[self.split]))
+            base_path = self.files[self.split][r_index].rstrip()
+        else:
+            base_path = img_path
+        lbl_path = os.path.join(self.annotations_base,
+                                base_path.split(os.sep)[-2],
+                                os.path.basename(base_path)[:-15] + '{}_labelIds.png'.format(gt_mode))
+
         return img_path, depth_path, lbl_path
 
     def recursive_glob(self, rootdir='.', suffix=''):
