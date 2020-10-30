@@ -243,7 +243,9 @@ class FixedResize(object):
 #  For Gaussian noise, we use σ=5  to  simulate  the  noise  level  in  most  natural  low-light images."
 class RandomDarken(object):
     def __init__(self, darken):
-        self.darken = darken  # size: (h, w)
+        self.darken = darken
+        self.gaussian_var = cfg.DATASET.DARKEN.GAUSSIAN_SIGMA*cfg.DATASET.DARKEN.GAUSSIAN_SIGMA
+        self.poisson = cfg.DATASET.DARKEN.POISSON
 
     def __call__(self, sample):
         mask = sample['label']
@@ -258,8 +260,13 @@ class RandomDarken(object):
 
             # Add noise
             img_arr = np.array(img).astype(np.float32) / 255.
-            img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=False)
-            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', var=0.001, clip=True)
+
+            # Shot noise, proportional to number of photons measured
+            if self.poisson:
+                img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=True)
+            # Temperature noise, constant for sensor at temperature
+            if self.gaussian_var > 0:
+                img_arr = skimage.util.random_noise(img_arr, mode='gaussian', var=self.gaussian_var, clip=True)
             img = Image.fromarray(np.uint8(img_arr * 255.))
 
         return {'image': img,
@@ -272,7 +279,8 @@ class Darken(object):
         self.darken = cfg.DATASET.DARKEN.DARKEN  # size: (h, w)
         self.gamma = cfg.DATASET.DARKEN.GAMMA
         self.gain = cfg.DATASET.DARKEN.GAIN
-        self.gaussian_m = cfg.DATASET.DARKEN.GAUSSIAN_M
+        self.gaussian_var = cfg.DATASET.DARKEN.GAUSSIAN_SIGMA * cfg.DATASET.DARKEN.GAUSSIAN_SIGMA
+        self.poisson = cfg.DATASET.DARKEN.POISSON
 
     def __call__(self, sample):
         mask = sample['label']
@@ -287,9 +295,11 @@ class Darken(object):
 
             # Add noise
             # Shot noise, proportional to number of photons measured
-            img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=False)
+            if self.poisson:
+                img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=True)
             # Temperature noise, constant for sensor at temperature
-            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', var=0.001, clip=True)
+            if self.gaussian_var > 0:
+                img_arr = skimage.util.random_noise(img_arr, mode='gaussian', var=self.gaussian_var, clip=True)
 
             img = Image.fromarray(np.uint8(img_arr * 255.))
 
