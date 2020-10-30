@@ -259,7 +259,7 @@ class RandomDarken(object):
             # Add noise
             img_arr = np.array(img).astype(np.float32) / 255.
             img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=False)
-            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', mean= 5./255., clip=True)
+            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', var=0.001, clip=True)
             img = Image.fromarray(np.uint8(img_arr * 255.))
 
         return {'image': img,
@@ -289,7 +289,7 @@ class Darken(object):
             # Shot noise, proportional to number of photons measured
             img_arr = skimage.util.random_noise(img_arr, mode='poisson', clip=False)
             # Temperature noise, constant for sensor at temperature
-            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', mean=self.gaussian_m, clip=True)
+            img_arr = skimage.util.random_noise(img_arr, mode='gaussian', var=0.001, clip=True)
 
             img = Image.fromarray(np.uint8(img_arr * 255.))
 
