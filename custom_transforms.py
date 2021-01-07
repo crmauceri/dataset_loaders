@@ -242,7 +242,7 @@ class FixedResize(object):
 #  In our work, we use the built-in function of MATLAB imnoise to generate Poisson noise.
 #  For Gaussian noise, we use σ=5  to  simulate  the  noise  level  in  most  natural  low-light images."
 class RandomDarken(object):
-    def __init__(self, darken):
+    def __init__(self, cfg, darken):
         self.darken = darken
         self.gaussian_var = cfg.DATASET.DARKEN.GAUSSIAN_SIGMA*cfg.DATASET.DARKEN.GAUSSIAN_SIGMA
         self.poisson = cfg.DATASET.DARKEN.POISSON

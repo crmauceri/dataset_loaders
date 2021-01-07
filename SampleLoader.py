@@ -88,7 +88,7 @@ class SampleLoader():
         composed_transforms = transforms.Compose([
             tr.RandomHorizontalFlip(),
             tr.RandomScaleCrop(base_size=self.base_size, crop_size=self.crop_size, fill=255),
-            tr.RandomDarken(self.darken),
+            tr.RandomDarken(self.cfg, self.darken),
             #tr.RandomGaussianBlur(), #TODO Not working for depth channel
             tr.Normalize(mean=self.data_mean, std=self.data_std),
             tr.ToTensor()])
