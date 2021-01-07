@@ -1,4 +1,5 @@
 from deeplab3.dataloaders.datasets import cityscapes, coco, combine_dbs, pascal, sbd, sunrgbd, scenenet
+from deeplab3.dataloaders.utils import get_nyu13_labels, get_cityscapes_labels, get_pascal_labels, get_sunrgbd_labels
 from torch.utils.data import DataLoader
 
 def make_dataset(cfg, split):
@@ -50,3 +51,19 @@ def make_data_loader(cfg, **kwargs):
         test_loader = None
 
     return train_loader, val_loader, test_loader, num_class
+
+def get_label_colors(cfg):
+    if cfg.DATASET.NAME == 'pascal' or cfg.DATASET.NAME == 'coco':
+        return get_pascal_labels()
+
+    elif cfg.DATASET.NAME == 'cityscapes':
+        return get_cityscapes_labels()
+
+    elif cfg.DATASET.NAME == 'scenenet':
+        return get_nyu13_labels()
+
+    elif cfg.DATASET.NAME in ['sunrgbd', 'matterport3d']:
+        return get_sunrgbd_labels()
+
+    else:
+        raise NotImplementedError

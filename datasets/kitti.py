@@ -9,7 +9,7 @@ from deeplab3.dataloaders import custom_transforms as tr
 from deeplab3.dataloaders.SampleLoader import SampleLoader
 
 
-class CityscapesSegmentation(data.Dataset):
+class KittiSegmentation(data.Dataset):
     def __init__(self, cfg, split="train"):
 
         self.root = cfg.DATASET.ROOT
@@ -18,7 +18,7 @@ class CityscapesSegmentation(data.Dataset):
 
         self.mode = cfg.DATASET.MODE
 
-        self.loader = CityscapesSampleLoader(cfg, split)
+        self.loader = KittiSampleLoader(cfg, split)
 
         self.files = {}
 
@@ -76,7 +76,7 @@ class CityscapesSegmentation(data.Dataset):
                 for filename in filenames if filename.endswith(suffix)]
 
 
-class CityscapesSampleLoader(SampleLoader):
+class KittiSampleLoader(SampleLoader):
     def __init__(self, cfg, split="train"):
         super().__init__(cfg, cfg.DATASET.MODE, split,
                         cfg.DATASET.BASE_SIZE, cfg.DATASET.CROP_SIZE)
@@ -116,31 +116,34 @@ class CityscapesSampleLoader(SampleLoader):
         _target = Image.fromarray(_tmp)
         return _target
 
+    def depth_read(filename):
+        # loads depth map D from png file
+        # and returns it as a numpy array,
+        # for details see readme.txt
+
+        depth_png = np.array(Image.open(filename), dtype=int)
+        # make sure we have a proper 16bit depth map here.. not 8bit!
+        assert (np.max(depth_png) > 255)
+
+        depth = depth_png.astype(np.float) / 256.
+        depth[depth_png == 0] = -1.
+        return depth
+
     def loadDepth(self, depth_path):
-        if self.cfg.DATASET.SYNTHETIC:
-            _depth_arr = np.array(Image.open(depth_path), dtype=int)
-            # if np.max(_depth_arr) > 10000:
-            #     print("Large max depth: {} {}".format(np.max(_depth_arr), depth_path))
-            _depth_arr = (_depth_arr.astype('float32') / 10000.) * 256
-            np.clip(_depth_arr, 0, 255, out=_depth_arr)
-            _depth_arr = _depth_arr.astype(np.uint8)
-            _depth = Image.fromarray(_depth_arr).convert('L')
-        elif self.mode == 'RGBD':
-            _disparity_arr = np.array(Image.open(depth_path)).astype(np.float32)
-            # Conversion from https://github.com/mcordts/cityscapesScripts see `disparity`
-            # See https://github.com/mcordts/cityscapesScripts/issues/55#issuecomment-411486510
-            _disparity_arr[_disparity_arr > 0] = (_disparity_arr[_disparity_arr > 0] - 1.0) / 256.
-            _depth_arr = np.zeros(_disparity_arr.shape)
-            _depth_arr[_disparity_arr > 0] = 0.2 * 2262 / _disparity_arr[_disparity_arr > 0]
-            # _depth_arr[_depth_arr > 60] = 60
-            # _depth_arr = _depth_arr / 60. * 255.
-            # _depth_arr = _depth_arr.astype(np.uint8)
-            # _depth = Image.fromarray(_depth_arr).convert('L')
+        if self.mode == 'RGBD':
+            # loads depth map D from png file
+            # and returns it as a numpy array,
+            # for details see readme.txt
+
+            depth_png = np.array(Image.open(filename), dtype=int)
+            # make sure we have a proper 16bit depth map here.. not 8bit!
+            assert (np.max(depth_png) > 255)
+
+            depth = depth_png.astype(np.float) / 256.
+            depth[depth_png == 0] = -1.
             _depth = Image.fromarray(_depth_arr)
         elif self.mode == 'RGB_HHA':
-            # Depth channel is inverse with 25600 / depth
-            # Height channel is inverse with 2560 / height
-            _depth = Image.open(depth_path).convert('RGB')
+            raise ValueError("KITTI Loader for HHA images not implemented")
         return _depth
 
     def encode_segmap(self, mask):
