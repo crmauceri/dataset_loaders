@@ -34,10 +34,10 @@ class SampleLoader():
         sample = {'image': _img, 'label': _target, 'depth': _depth}
         return sample
 
-    def load_sample(self, img_path, depth_path, lbl_path, no_transforms=False):
+    def load_sample(self, img_path, depth_path, lbl_path):
         sample = self.get_sample(img_path, depth_path, lbl_path)
 
-        if no_transforms:
+        if  self.cfg.DATASET.NO_TRANSFORMS:
             sample = tr.ToTensor()(sample)
         else:
             if self.split in ['train', 'train_extra']:

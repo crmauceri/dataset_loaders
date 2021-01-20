@@ -41,9 +41,9 @@ class KittiSegmentation(data.Dataset):
     def __len__(self):
         return len(self.files[self.split])
 
-    def __getitem__(self, index, no_transforms=False):
+    def __getitem__(self, index):
         img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
-        sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
+        sample = self.loader.load_sample(img_path, depth_path, lbl_path)
         sample['id'] = img_path
         return sample
 

@@ -8,7 +8,6 @@ from torchvision import transforms
 from deeplab3.dataloaders import custom_transforms as tr
 from deeplab3.dataloaders.SampleLoader import SampleLoader
 
-
 class CityscapesSegmentation(data.Dataset):
     def __init__(self, cfg, split="train"):
 
@@ -41,9 +40,9 @@ class CityscapesSegmentation(data.Dataset):
     def __len__(self):
         return len(self.files[self.split])
 
-    def __getitem__(self, index, no_transforms=False):
+    def __getitem__(self, index):
         img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
-        sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms)
+        sample = self.loader.load_sample(img_path, depth_path, lbl_path)
         sample['id'] = img_path
         return sample
 
@@ -60,9 +59,17 @@ class CityscapesSegmentation(data.Dataset):
             base_path = self.files[self.split][r_index].rstrip()
         else:
             base_path = img_path
+
+        if self.cfg.DATASET.ANNOTATION_TYPE == 'semantic':
+            label_format = '{}_labelIds.png'
+        elif self.cfg.DATASET.ANNOTATION_TYPE in ['instance', 'bbox']:
+            label_format = '{}_instanceIds.png'
+        else:
+            raise ValueError("DATASET.ANNOTATION_TYPE={} not implemented".format(self.cfg.DATASET.ANNOTATION_TYPE))
+
         lbl_path = os.path.join(self.annotations_base,
-                                base_path.split(os.sep)[-2],
-                                os.path.basename(base_path)[:-15] + '{}_labelIds.png'.format(gt_mode))
+            base_path.split(os.sep)[-2],
+            os.path.basename(base_path)[:-15] + label_format.format(gt_mode))
 
         return img_path, depth_path, lbl_path
 
@@ -111,9 +118,19 @@ class CityscapesSampleLoader(SampleLoader):
             self.data_std =  [0.190,  0.190,  0.185, 0.061, 0.355, 0.196]
 
     def getLabels(self, lbl_path):
-        _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
-        _tmp = self.encode_segmap(_tmp)
-        _target = Image.fromarray(_tmp)
+        if self.cfg.DATASET.ANNOTATION_TYPE == 'semantic':
+            _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
+            _tmp = self.encode_segmap(_tmp)
+            _target = Image.fromarray(_tmp)
+        elif self.cfg.DATASET.ANNOTATION_TYPE == 'instance':
+            _tmp = np.array(Image.open(lbl_path))
+            _target = self.decode_instance_map(_tmp)
+        elif self.cfg.DATASET.ANNOTATION_TYPE == 'bbox':
+            _tmp = np.array(Image.open(lbl_path))
+            _target = self.decode_bbox(_tmp)
+        else:
+            raise ValueError("DATASET.ANNOTATION_TYPE={} not implemented".format(self.cfg.DATASET.ANNOTATION_TYPE))
+
         return _target
 
     def loadDepth(self, depth_path):
@@ -150,6 +167,42 @@ class CityscapesSampleLoader(SampleLoader):
         for _validc in self.valid_classes:
             mask[mask == _validc] = self.class_map[_validc]
         return mask
+
+    def decode_instance_map(self, mask):
+        # Produces a wxhxn matrix where each n is an instance mask and the values of the instance mask are the type label.
+        instanceIds = np.unique(mask)
+        target = np.zeros((mask.shape[0], mask.shape[1], len(instanceIds)))
+        for i, instanceId in enumerate(instanceIds):
+            tmp = np.zeros(mask.shape)
+            if instanceId < 1000:
+                tmp[mask == instanceId] = instanceId
+            else:
+                tmp[mask == instanceId] = instanceId / 1000
+            target[:, :, i] = tmp
+        return target
+
+    def decode_bbox(self, mask):
+        h, w = mask.shape
+        instanceIds = np.unique(mask)
+        target = np.zeros((len(instanceIds), 5))
+        for i, instanceId in enumerate(instanceIds):
+            # Find label
+            if instanceId < 1000:
+                target[i, 0] = instanceId
+            else:
+                target[i, 0] = instanceId / 1000
+            # Find bbox
+            tmp = mask == instanceId
+            nonzero_idx = np.nonzero(tmp)
+            min_y, min_x = np.min(nonzero_idx, axis=1)
+            max_y, max_x = np.max(nonzero_idx, axis=1)
+            bbox_h = max_y-min_y
+            bbox_w = max_x-min_x
+            center_x = min_x + bbox_w/2.0
+            center_y = min_y + bbox_h/2.0
+            #Normalize bbox
+            target[i, 1:] = [center_x/w, center_y/h, bbox_w/w, bbox_h/h]
+        return target
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults

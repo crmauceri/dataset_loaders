@@ -53,11 +53,11 @@ class SceneNetSegmentation(data.Dataset):
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem__(self, index, no_transforms=False):
+    def __getitem__(self, index):
         img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
 
         try:
-            sample = self.loader.load_sample(img_path, depth_path, lbl_path, no_transforms=no_transforms)
+            sample = self.loader.load_sample(img_path, depth_path, lbl_path)
 
         except IOError as e:
             # Instead of raising error, warn and continue training, but this image should probably be added to the filter in __init__

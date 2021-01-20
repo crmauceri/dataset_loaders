@@ -40,9 +40,9 @@ class RGBDSegmentation(Dataset):
             self.ids = self._preprocess(ids, ids_file)
         self.cfg = cfg
 
-    def __getitem__(self, index, no_transforms=False):
+    def __getitem__(self, index):
         img_path, depth_path, img_id = self.get_path(index)
-        sample = self.loader.load_sample(img_path, depth_path, img_id, no_transforms)
+        sample = self.loader.load_sample(img_path, depth_path, img_id)
         sample['id'] = img_id
         return sample
 

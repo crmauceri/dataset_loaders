@@ -59,11 +59,11 @@ class SBDSegmentation(data.Dataset):
         print('Number of images: {:d}'.format(len(self.images)))
 
 
-    def __getitem__(self, index, no_transforms=False):
+    def __getitem__(self, index):
         _img, _target = self._make_img_gt_point_pair(index)
         sample = {'image': _img, 'label': _target}
 
-        if no_transforms:
+        if  self.cfg.DATASET.NO_TRANSFORMS:
             return sample
 
         return self.transform(sample)
