@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 import scipy.misc as m
+from skimage import measure
 from PIL import Image
 from torch.utils import data
 from torchvision import transforms
@@ -184,25 +185,28 @@ class CityscapesSampleLoader(SampleLoader):
     def decode_bbox(self, mask):
         h, w = mask.shape
         instanceIds = np.unique(mask)
-        target = np.zeros((len(instanceIds), 5))
+        target = np.zeros((1, 5))
         for i, instanceId in enumerate(instanceIds):
             # Find label
             if instanceId < 1000:
-                target[i, 0] = instanceId
+                label = instanceId
             else:
-                target[i, 0] = instanceId / 1000
+                label = instanceId / 1000
             # Find bbox
-            tmp = mask == instanceId
-            nonzero_idx = np.nonzero(tmp)
-            min_y, min_x = np.min(nonzero_idx, axis=1)
-            max_y, max_x = np.max(nonzero_idx, axis=1)
-            bbox_h = max_y-min_y
-            bbox_w = max_x-min_x
-            center_x = min_x + bbox_w/2.0
-            center_y = min_y + bbox_h/2.0
-            #Normalize bbox
-            target[i, 1:] = [center_x/w, center_y/h, bbox_w/w, bbox_h/h]
-        return target
+            sub_instances, num_sub = measure.label(mask == instanceId, return_num=True)
+            for sub_instanceId in range(1, num_sub+1):
+                tmp = sub_instances == sub_instanceId
+                nonzero_idx = np.nonzero(tmp)
+                min_y, min_x = np.min(nonzero_idx, axis=1)
+                max_y, max_x = np.max(nonzero_idx, axis=1)
+                bbox_h = max_y-min_y
+                bbox_w = max_x-min_x
+                center_x = min_x + bbox_w/2.0
+                center_y = min_y + bbox_h/2.0
+                #Normalize bbox
+                bbox = np.array(([label, center_x/w, center_y/h, bbox_w/w, bbox_h/h],))
+                target = np.concatenate((target, bbox))
+        return target[1:, :]
 
 if __name__ == '__main__':
     from deeplab3.config.defaults import get_cfg_defaults
