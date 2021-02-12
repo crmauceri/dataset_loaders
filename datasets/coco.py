@@ -54,6 +54,8 @@ class COCOSegmentation(Dataset):
         else:
             ids = list(self.coco.imgs.keys())
             self.ids = self._preprocess(ids, ids_file)
+
+        self.coco_id_index = dict(zip(self.ids), range(len(self.ids)))
         self.cfg = cfg
 
     def __getitem__(self, index):
@@ -132,8 +134,25 @@ class COCOSegmentationSampleLoader(SampleLoader):
     def getLabels(self, img_id):
         img_metadata = self.coco.loadImgs(img_id)[0]
         cocotarget = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))
-        _target = Image.fromarray(self.gen_seg_mask(
-            cocotarget, img_metadata['height'], img_metadata['width']))
+        if self.cfg.DATASET.ANNOTATION_TYPE == 'semantic':
+            _target = Image.fromarray(self.gen_seg_mask(cocotarget, img_metadata['height'], img_metadata['width']))
+        elif self.cfg.DATASET.ANNOTATION_TYPE == 'instance':
+            raise ValueError('Untested dataset annotation type')
+            _target = gen_instance_mask(self.gen_seg_mask(cocotarget, img_metadata['height'], img_metadata['width']))
+        elif self.cfg.DATASET.ANNOTATION_TYPE == 'bbox':
+            _target = np.zeros((len(cocotarget), 5))
+            for i, x in enumerate(cocotarget):
+                # [label, center_x/w, center_y/h, bbox_w/w, bbox_h/h]
+                center_x = (x['bbox'][1] + x['bbox'][3]/2.0)/img_metadata['width']
+                center_y = (x['bbox'][0] + x['bbox'][2]/2.0)/img_metadata['height']
+                w = x['bbox'][3]/img_metadata['width']
+                h = x['bbox'][2]/img_metadata['height']
+
+                _target[i, 0] = x['category_id']
+                _target[i, 1:] = [center_x, center_y, w, h]
+        else:
+            raise ValueError("DATASET.ANNOTATION_TYPE={} not implemented".format(self.cfg.DATASET.ANNOTATION_TYPE))
+
         return _target
 
     def loadSyntheticDepth(self, depth_path):
@@ -162,6 +181,24 @@ class COCOSegmentationSampleLoader(SampleLoader):
                 mask[:, :] += (mask == 0) * (m * c)
             else:
                 mask[:, :] += (mask == 0) * (((np.sum(m, axis=2)) > 0) * c).astype(np.uint8)
+        return mask
+
+    def gen_instance_mask(self, target, h, w):
+        n = len(target)
+        mask = np.zeros((h, w, n), dtype=np.uint8)
+        coco_mask = self.coco_mask
+        for i, instance in enumerate(target):
+            rle = coco_mask.frPyObjects(instance['segmentation'], h, w)
+            m = coco_mask.decode(rle)
+            cat = instance['category_id']
+            if cat in self.CAT_LIST:
+                c = self.CAT_LIST.index(cat)
+            else:
+                continue
+            if len(m.shape) < 3:
+                mask[:, :, i] = (m * c)
+            else:
+                mask[:, :, i] = (((np.sum(m, axis=2)) > 0) * c).astype(np.uint8)
         return mask
 
 if __name__ == "__main__":
