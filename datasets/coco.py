@@ -149,7 +149,7 @@ class COCOSegmentationSampleLoader(SampleLoader):
                 h = x['bbox'][2]/img_metadata['height']
 
                 _target[i, 0] = x['category_id']
-                _target[i, 1:] = [center_x, center_y, w, h]
+                _target[i, 1:] = [center_y, center_x, h, w]
         else:
             raise ValueError("DATASET.ANNOTATION_TYPE={} not implemented".format(self.cfg.DATASET.ANNOTATION_TYPE))
 
