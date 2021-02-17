@@ -145,8 +145,8 @@ class COCOSegmentationSampleLoader(SampleLoader):
                 # [label, center_x/w, center_y/h, bbox_w/w, bbox_h/h]
                 center_x = (x['bbox'][0] + x['bbox'][2]/2.0)/img_metadata['width']
                 center_y = (x['bbox'][1] + x['bbox'][3]/2.0)/img_metadata['height']
-                w = x['bbox'][3]/img_metadata['width']
-                h = x['bbox'][2]/img_metadata['height']
+                w = x['bbox'][2]/img_metadata['width']
+                h = x['bbox'][3]/img_metadata['height']
 
                 _target[i, 0] = x['category_id']
                 _target[i, 1:] = [center_y, center_x, h, w]
