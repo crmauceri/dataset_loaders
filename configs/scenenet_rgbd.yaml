@@ -1,0 +1,5 @@
+DATASET:
+  NAME: 'scenenet'
+  ROOT: 'datasets/scenenet'
+  MODE: 'RGBD'
+  N_CLASSES: 14

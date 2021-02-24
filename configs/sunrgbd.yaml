@@ -1,0 +1,5 @@
+DATASET:
+  NAME: 'sunrgbd'
+  ROOT: 'datasets/SUNRGBD'
+  MODE: 'RGBD'
+  N_CLASSES: 38

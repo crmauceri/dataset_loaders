@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms
-from deeplab3.dataloaders import custom_transforms as tr
+from dataloaders import custom_transforms as tr
 
 class VOCSegmentation(Dataset):
     """
@@ -106,8 +106,8 @@ class VOCSegmentation(Dataset):
 
 
 if __name__ == '__main__':
-    from deeplab3.config.defaults import get_cfg_defaults
-    from deeplab3.dataloaders.utils import decode_segmap
+    from dataloaders.config.defaults import get_cfg_defaults
+    from dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse

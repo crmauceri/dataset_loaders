@@ -7,7 +7,7 @@ import torch.utils.data as data
 from PIL import Image
 
 from torchvision import transforms
-from deeplab3.dataloaders import custom_transforms as tr
+from dataloaders import custom_transforms as tr
 
 class SBDSegmentation(data.Dataset):
     NUM_CLASSES = 21
@@ -93,8 +93,8 @@ class SBDSegmentation(data.Dataset):
 
 
 if __name__ == '__main__':
-    from deeplab3.config.defaults import get_cfg_defaults
-    from deeplab3.dataloaders.utils import decode_segmap
+    from dataloaders.config.defaults import get_cfg_defaults
+    from dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse

@@ -6,10 +6,10 @@ import os
 from pycocotools.coco import COCO
 from pycocotools import mask
 from torchvision import transforms
-from deeplab3.dataloaders import custom_transforms as tr
+from dataloaders import custom_transforms as tr
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-from deeplab3.dataloaders.datasets.coco import COCOSegmentationSampleLoader
+from dataloaders.datasets.coco import COCOSegmentationSampleLoader
 
 
 class RGBDSegmentation(Dataset):
@@ -133,9 +133,9 @@ class RGBDSegmentationSampleLoader(COCOSegmentationSampleLoader):
         return _depth
 
 if __name__ == "__main__":
-    from deeplab3.config.defaults import get_cfg_defaults
-    from deeplab3.dataloaders import custom_transforms as tr
-    from deeplab3.dataloaders.utils import decode_segmap
+    from dataloaders.config.defaults import get_cfg_defaults
+    from dataloaders import custom_transforms as tr
+    from dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     from torchvision import transforms
     import matplotlib.pyplot as plt

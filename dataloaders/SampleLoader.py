@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 import torch
 from torchvision import transforms
-from deeplab3.dataloaders import custom_transforms as tr
+from dataloaders import custom_transforms as tr
 import scipy.stats
 
 class SampleLoader():

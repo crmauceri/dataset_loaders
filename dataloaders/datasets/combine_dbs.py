@@ -58,14 +58,14 @@ class CombineDBs(data.Dataset):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from deeplab3.dataloaders.datasets import pascal, sbd
-    from deeplab3.dataloaders import sbd
+    from dataloaders.datasets import pascal, sbd
+    from dataloaders import sbd
     import torch
     import numpy as np
-    from deeplab3.dataloaders.utils import decode_segmap
+    from dataloaders.utils import decode_segmap
     import argparse
 
-    from deeplab3.config.defaults import get_cfg_defaults
+    from dataloaders.config.defaults import get_cfg_defaults
 
     parser = argparse.ArgumentParser(description="Test dbs Loader")
     parser.add_argument('config_file', help='config file path')

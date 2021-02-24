@@ -5,9 +5,9 @@ from PIL import Image
 from torch.utils import data
 from torchvision import transforms
 from warnings import warn
-from deeplab3.dataloaders import custom_transforms as tr
-import deeplab3.dataloaders.datasets.scenenet_pb2 as sn
-from deeplab3.dataloaders.SampleLoader import SampleLoader
+from dataloaders import custom_transforms as tr
+import dataloaders.datasets.scenenet_pb2 as sn
+from dataloaders.SampleLoader import SampleLoader
 
 class SceneNetSegmentation(data.Dataset):
     NUM_CLASSES = 14
@@ -54,7 +54,7 @@ class SceneNetSegmentation(data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index):
-        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
+        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.DATASET.SCRAMBLE_LABELS)
 
         try:
             sample = self.loader.load_sample(img_path, depth_path, lbl_path)
@@ -118,8 +118,8 @@ class ScenenetSampleLoader(SampleLoader):
         return _depth
 
 if __name__ == '__main__':
-    from deeplab3.config.defaults import get_cfg_defaults
-    from deeplab3.dataloaders.utils import decode_segmap
+    from dataloaders.config.defaults import get_cfg_defaults
+    from dataloaders.utils import decode_segmap
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse

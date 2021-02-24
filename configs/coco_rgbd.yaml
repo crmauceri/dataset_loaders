@@ -1,0 +1,5 @@
+DATASET:
+  NAME: 'coco'
+  ROOT: 'datasets/coco/'
+  MODE: 'RGBD'
+  SYNTHETIC: True

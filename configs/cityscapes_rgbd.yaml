@@ -1,0 +1,5 @@
+DATASET:
+  NAME: 'cityscapes'
+  ROOT: 'datasets/cityscapes/'
+  MODE: 'RGBD'
+  N_CLASSES: 19

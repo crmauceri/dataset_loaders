@@ -6,8 +6,8 @@ from skimage import measure
 from PIL import Image
 from torch.utils import data
 from torchvision import transforms
-from deeplab3.dataloaders import custom_transforms as tr
-from deeplab3.dataloaders.SampleLoader import SampleLoader
+from dataloaders import custom_transforms as tr
+from dataloaders.SampleLoader import SampleLoader
 
 class CityscapesSegmentation(data.Dataset):
     def __init__(self, cfg, split="train"):
@@ -42,7 +42,7 @@ class CityscapesSegmentation(data.Dataset):
         return len(self.files[self.split])
 
     def __getitem__(self, index):
-        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.TEST.SCRAMBLE_LABELS)
+        img_path, depth_path, lbl_path = self.get_path(index, self.cfg.DATASET.SCRAMBLE_LABELS)
         sample = self.loader.load_sample(img_path, depth_path, lbl_path)
         sample['id'] = img_path
         return sample
@@ -209,8 +209,8 @@ class CityscapesSampleLoader(SampleLoader):
         return target[1:, :]
 
 if __name__ == '__main__':
-    from deeplab3.config.defaults import get_cfg_defaults
-    from deeplab3.dataloaders.utils import decode_segmap, sample_distribution
+    from dataloaders.config.defaults import get_cfg_defaults
+    from dataloaders.utils import decode_segmap, sample_distribution
     from torch.utils.data import DataLoader
     import matplotlib.pyplot as plt
     import argparse

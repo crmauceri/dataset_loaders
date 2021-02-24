@@ -1,5 +1,5 @@
-from deeplab3.dataloaders.datasets import cityscapes, coco, combine_dbs, pascal, sbd, sunrgbd, scenenet
-from deeplab3.dataloaders.utils import get_nyu13_labels, get_cityscapes_labels, get_pascal_labels, get_sunrgbd_labels
+from dataloaders.datasets import cityscapes, coco, combine_dbs, pascal, sbd, sunrgbd, scenenet
+from dataloaders.utils import get_nyu13_labels, get_cityscapes_labels, get_pascal_labels, get_sunrgbd_labels
 from torch.utils.data import DataLoader
 
 def make_dataset(cfg, split):
