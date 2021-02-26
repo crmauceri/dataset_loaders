@@ -21,7 +21,7 @@ def main(cfg):
                         img_path, depth_path, img_id = dataset.dataset.get_path(id)
                         assert img_id == sample['id'][jj].item()
                         filepath = 'normalized_depth'.join(img_path.rsplit('image', 1))
-                        filepath = os.path.splitext(filepath)[0] + '.txt'
+                        filepath = os.path.splitext(filepath)[0] + '.jpg'
                         img_list.append(dataset.dataset.coco.loadImgs(img_id)[0]['file_name'])
 
                     dir = os.path.dirname(filepath)
