@@ -3,16 +3,16 @@ from dataloaders.utils import get_nyu13_labels, get_cityscapes_labels, get_pasca
 from torch.utils.data import DataLoader
 
 def make_dataset(cfg, split):
-    if cfg.DATASET.NAME == 'pascal':
-        if cfg.DATASET.MODE != "RGB":
-            raise ValueError('RGBD DataLoader not implemented')
-        if cfg.DATASET.USE_SBD:
-            sbd_train = sbd.SBDSegmentation(cfg, split=['train', 'val'])
-            return combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
+    # if cfg.DATASET.NAME == 'pascal':
+    #     if cfg.DATASET.MODE != "RGB":
+    #         raise ValueError('RGBD DataLoader not implemented')
+    #     if cfg.DATASET.USE_SBD:
+    #         sbd_train = sbd.SBDSegmentation(cfg, split=['train', 'val'])
+    #         return combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
+    #
+    #     return pascal.VOCSegmentation(cfg, split=split)
 
-        return pascal.VOCSegmentation(cfg, split=split)
-
-    elif cfg.DATASET.NAME == 'cityscapes':
+    if cfg.DATASET.NAME == 'cityscapes':
         if split == "train":
             return cityscapes.CityscapesSegmentation(cfg, split=cfg.DATASET.CITYSCAPES.TRAIN_SET)
         else:
@@ -51,6 +51,7 @@ def make_data_loader(cfg, **kwargs):
         test_loader = None
 
     return train_loader, val_loader, test_loader, num_class
+
 
 def get_label_colors(cfg):
     if cfg.DATASET.NAME == 'pascal' or cfg.DATASET.NAME == 'coco':

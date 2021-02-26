@@ -55,7 +55,7 @@ class COCOSegmentation(Dataset):
             ids = list(self.coco.imgs.keys())
             self.ids = self._preprocess(ids, ids_file)
 
-        self.coco_id_index = dict(zip(self.ids), range(len(self.ids)))
+        self.coco_id_index = dict(zip(self.ids, range(len(self.ids))))
         self.cfg = cfg
 
     def __getitem__(self, index):

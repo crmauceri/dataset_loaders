@@ -39,6 +39,10 @@ class SampleLoader():
 
         if  self.cfg.DATASET.NO_TRANSFORMS:
             sample = tr.ToTensor()(sample)
+        elif self.cfg.DATASET.ANNOTATION_TYPE == 'bbox':
+            raise ValueError('Transforms not implemented for bounding boxes')
+        elif self.cfg.DATASET.NORMALIZE_ONLY:
+            sample = self.transform_norm(sample)
         else:
             if self.split in ['train', 'train_extra']:
                 sample = self.transform_tr(sample)
@@ -47,7 +51,7 @@ class SampleLoader():
             elif self.split == 'test':
                 sample = self.transform_ts(sample)
 
-            if self.cfg.DATASET.POWER_TRANSFORM and not isinstance(_depth, list):
+            if self.cfg.DATASET.POWER_TRANSFORM:
                 sample['depth'] = scipy.stats.boxcox(sample['depth'], self.cfg.DATASET.PT_LAMBDA)
 
         #Composite RGBD
@@ -83,6 +87,12 @@ class SampleLoader():
         _tmp = np.array(Image.open(lbl_path), dtype=np.uint8)
         _target = Image.fromarray(_tmp)
         return _target
+
+    def transform_norm(self, sample):
+        composed_transforms = transforms.Compose([
+            tr.Normalize(mean=self.data_mean, std=self.data_std),
+            tr.ToTensor()])
+        return composed_transforms(sample)
 
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([

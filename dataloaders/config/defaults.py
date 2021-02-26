@@ -13,12 +13,17 @@ _C.SYSTEM.NO_CUDA = False
 # Random Seed
 _C.SYSTEM.SEED = 1
 
+_C.TRAIN = CN()
+_C.TRAIN.BATCH_SIZE = 1
+_C.TEST = CN()
+_C.TEST.BATCH_SIZE = 1
+
 _C.DATASET = CN()
 # ['pascal', 'coco', 'cityscapes', 'sunrgbd']
 _C.DATASET.NAME = 'coco'
 _C.DATASET.N_CLASSES = 81
 # Root directory of dataset
-_C.DATASET.ROOT = '../datasets/coco/'
+_C.DATASET.ROOT = 'datasets/coco/'
 # whether to use SBD dataset
 _C.DATASET.USE_STD = True
 # Base image size
@@ -32,6 +37,8 @@ _C.DATASET.SYNTHETIC = False
 _C.DATASET.ANNOTATION_TYPE = 'semantic' #['instance', 'bbox']
 # Don't use any transformations including normalization. This flag is used for data statistics.
 _C.DATASET.NO_TRANSFORMS = False
+# Only use normalization. This flag is used to write normalized depth images to uint8 files.
+_C.DATASET.NORMALIZE_ONLY = False
 
 # Artifially darken input images
 _C.DATASET.DARKEN = CN()
